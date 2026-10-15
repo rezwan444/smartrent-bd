@@ -1,0 +1,350 @@
+/* === IMPORTS === */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* === THEME SETUP === */
+@custom-variant dark (&:is(.dark *));
+
+html,
+body {
+  height: 100%;
+  background-color: var(--background);
+  color-scheme: light;
+}
+
+body {
+  overflow-y: hidden;
+  /* overflow-y: hidden; */
+  scrollbar-width: thin; /* auto | thin */
+  scrollbar-color: var(--destructive);
+}
+
+/* ===== TEXT SELECTION (DARK UI FIX) ===== */
+::selection {
+  background: var(--destructiveSoft);
+  color: var(--foreground);
+}
+
+::-moz-selection {
+  background: var(--destructiveSoft);
+  color: var(--foreground);
+}
+
+/* =====================================================
+   GLOBAL SCROLLBAR (only if body scrolls)
+   ===================================================== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--primary); /* dark background */
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--destructive); /* GOFL red */
+  border-radius: 999px;
+  border: 2px solid var(--primary); /* spacing effect */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--destructiveSoft); /* brighter red on hover */
+}
+
+/* === THEME CONFIGURATION === */
+/* 
+ * Inline theme definition for Tailwind CSS v4
+ * This maps CSS custom properties to Tailwind color tokens
+ * All shadcn/ui components use these color mappings
+ */
+@theme inline {
+  /* === TYPOGRAPHY === */
+  /* --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono); */
+  --font-sans: var(--font-roboto);
+  --font-heading: var(--font-heading);
+
+  --color-primary: var(--primary);
+
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primaryDark);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-destructive-soft: var(--destructiveSoft);
+  /* success */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--successSoft);
+  --color-success-soft-foreground: var(--successSoft-foreground);
+
+  /* === CORE COLORS === */
+  --color-background: var(--background); /* Main background color */
+  --color-foreground: var(--foreground); /* Main text color */
+  --color-card: var(--card); /* Card background */
+  --color-card-foreground: var(--card-foreground); /* Card text */
+  --color-popover: var(--popover); /* Popover background */
+  --color-popover-foreground: var(--popover-foreground); /* Popover text */
+
+  /* === SEMANTIC COLORS === */
+  --color-primary: var(--primary); /* Primary brand color */
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary); /* Secondary color */
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted); /* Muted/subtle background */
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent); /* Accent color */
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive); /* Error/danger color */
+  --color-soft-white: var(--soft-white);
+
+  /* === INTERFACE ELEMENTS === */
+  --color-border: var(--border); /* Default border color */
+  --color-input: var(--input); /* Input field backgrounds */
+  --color-ring: var(--ring); /* Focus ring color */
+
+  /* === CHART COLORS === */
+  /* Predefined colors for data visualization */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* === SIDEBAR COLORS === */
+  /* Specific colors for sidebar components */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* === BORDER RADIUS SCALE === */
+  /* Consistent border radius across components */
+  --radius-sm: calc(var(--radius) - 4px); /* Small radius */
+  --radius-md: calc(var(--radius) - 2px); /* Medium radius */
+  --radius-lg: var(--radius); /* Large radius (default) */
+  --radius-xl: calc(var(--radius) + 4px); /* Extra large radius */
+}
+
+/* === LIGHT MODE COLOR PALETTE === */
+/* 
+ * Root color definitions for light mode
+ * Uses OKLCH color space for better color consistency and accessibility
+ * OKLCH format: oklch(lightness chroma hue)
+ */
+:root {
+  --radius: 0.625rem;
+
+  /* === BASE COLORS === */
+  --background: #faf9f6; /* Warm White */
+  --foreground: #252923; /* Charcoal */
+  --black: #252923; /* Charcoal */
+
+  /* === CARD === */
+  --card: #ffffff;
+  --card-foreground: #252923;
+
+  /* === POPOVER === */
+  --popover: #ffffff;
+  --popover-foreground: #252923;
+
+  /* === PRIMARY (Black) === */
+  --primary: #24483d; /* Forest Green */
+  --primaryDark: #1b352d; /* Forest Green, dense */
+  --primary-foreground: #faf9f6; /* Warm White text */
+
+  /* === SECONDARY (Champagne Light) === */
+  --secondary: #dde8df; /* Muted Sage */
+  --secondary-foreground: #252923;
+
+  /* === MUTED === */
+  --muted: #dde8df; /* Muted Sage */
+  --muted-foreground: #5f675f;
+
+  /* === ACCENT (Champagne) === */
+  --accent: #b66a43; /* Terracotta */
+  --accent-foreground: #faf9f6;
+
+  /* === STATUS === */
+  --destructive: #9f4f32;
+  --destructiveSoft: #b66a43;
+  --success: #24483d; /* Forest Green */
+
+  --soft-white: #faf9f6; /* Warm White */
+
+  /* === UI ELEMENTS === */
+  --border: #e5e5df; /* Border Gray */
+  --input: #ffffff;
+  --ring: #b66a43;
+
+  /* === CHART COLORS (brand-aligned) === */
+  --chart-1: #24483d; /* Forest Green */
+  --chart-2: #b66a43; /* Terracotta */
+  --chart-3: #dde8df; /* Muted Sage */
+  --chart-4: #faf9f6; /* Warm White */
+  --chart-5: #252923; /* Charcoal */
+
+  /* === SIDEBAR === */
+  --sidebar: #faf9f6; /* Warm White */
+  --sidebar-foreground: #252923;
+  --sidebar-primary: #24483d; /* Forest Green */
+  --sidebar-primary-foreground: #faf9f6;
+  --sidebar-accent: #dde8df; /* Muted Sage */
+  --sidebar-accent-foreground: #252923;
+  --sidebar-border: #e5e5df; /* Border Gray */
+  --sidebar-ring: #b66a43;
+}
+
+/* === LIGHT MODE ENFORCEMENT ===
+ * Keep the palette light even if a stale .dark class is present.
+ */
+.dark {
+  --background: #faf9f6;
+  --foreground: #252923;
+  --card: #ffffff;
+  --card-foreground: #252923;
+  --popover: #ffffff;
+  --popover-foreground: #252923;
+  --primary: #24483d; /* Forest Green */
+  --primaryDark: #1b352d;
+  --primary-foreground: #faf9f6;
+  --secondary: #dde8df;
+  --secondary-foreground: #252923;
+  --muted: #dde8df;
+  --muted-foreground: #5f675f;
+  --accent: #b66a43; /* Terracotta */
+  --accent-foreground: #faf9f6;
+  --destructive: #9f4f32;
+  --destructiveSoft: #b66a43;
+  --success: #24483d;
+  --soft-white: #faf9f6;
+  --border: #e5e5df;
+  --input: #ffffff;
+  --ring: #b66a43;
+  --chart-1: #24483d;
+  --chart-2: #b66a43;
+  --chart-3: #dde8df;
+  --chart-4: #faf9f6;
+  --chart-5: #252923;
+  --sidebar: #faf9f6;
+  --sidebar-foreground: #252923;
+  --sidebar-primary: #24483d;
+  --sidebar-primary-foreground: #faf9f6;
+  --sidebar-accent: #dde8df;
+  --sidebar-accent-foreground: #252923;
+  --sidebar-border: #e5e5df;
+  --sidebar-ring: #b66a43;
+}
+
+/* === BASE LAYER STYLES === */
+/* 
+ * Base layer applies fundamental styles to all elements
+ * These styles have the lowest specificity and can be overridden
+ */
+@layer base {
+  /* === UNIVERSAL STYLES === */
+  body {
+    font-family: var(--font-sans), system-ui, sans-serif;
+  }
+  * {
+    /* Apply border and ring colors to all elements */
+    @apply border-border outline-ring/50;
+  }
+
+  /* .customContainer {
+    @apply container mx-auto ;
+  } */
+
+  /* === CUSTOM UTILITY CLASSES === */
+  .customContainer {
+    max-width: 1600px;
+  }
+
+  /* === BODY STYLES === */
+  body {
+    /* Apply theme background and text colors */
+    @apply bg-background text-foreground;
+    /* Ensure smooth transitions and proper font rendering */
+    transition-property: color, background-color, border-color;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+  }
+}
+
+@layer utilities {
+  .font-heading {
+    font-family: var(--font-heading), system-ui, sans-serif;
+  }
+
+  /* === PRIMARY === */
+  .text-primary {
+    color: var(--primary);
+  }
+  .bg-primary {
+    background-color: var(--primary);
+  }
+  .bg-primary-dark {
+    background-color: var(--primaryDark);
+  }
+  .border-primary {
+    border-color: var(--primary);
+  }
+
+  /* === SECONDARY === */
+  .text-secondary {
+    color: var(--secondary);
+  }
+  .bg-secondary {
+    background-color: var(--secondary);
+  }
+  .border-secondary {
+    border-color: var(--secondary);
+  }
+
+  /* === MUTED / GRAY === */
+  .text-muted {
+    color: var(--muted-foreground);
+  }
+  .bg-muted {
+    background-color: var(--muted);
+  }
+  .border-muted {
+    border-color: var(--muted);
+  }
+
+  /* === ACCENT === */
+  .text-accent {
+    color: var(--accent-foreground);
+  }
+  .bg-accent {
+    background-color: var(--accent);
+  }
+  .border-accent {
+    border-color: var(--accent);
+  }
+
+  /* === STATUS COLORS === */
+  .text-danger {
+    color: var(--destructive);
+  }
+  .bg-danger {
+    background-color: var(--destructive);
+  }
+  .border-danger {
+    border-color: var(--destructive);
+  }
+
+  .customOrange {
+    color: var(--accent);
+  }
+
+  /* === BORDER RADIUS === */
+  .rounded-main {
+    border-radius: var(--radius);
+  }
+}
