@@ -62,7 +62,7 @@ export function Header({
           >
             <Image
               src={WEBSITE_DETAILS.SITE_LOGO}
-              alt="GOFL"
+              alt="SmartRent BD"
               width={70}
               height={70}
               draggable={false}

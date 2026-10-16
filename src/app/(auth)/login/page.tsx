@@ -120,7 +120,7 @@ export default function AdminLoginPage() {
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
                     type="email"
-                    placeholder="admin@gofl.com"
+                    placeholder="admin@smartrentbd.com"
                     className="h-12 pl-10 text-foreground  border-primary-dark
       focus:border-destructive
       focus:outline-none

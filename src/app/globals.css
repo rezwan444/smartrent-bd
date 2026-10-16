@@ -7,16 +7,15 @@
 
 html,
 body {
-  height: 100%;
+  min-height: 100%;
   background-color: var(--background);
   color-scheme: light;
 }
 
 body {
-  overflow-y: hidden;
-  /* overflow-y: hidden; */
-  scrollbar-width: thin; /* auto | thin */
-  scrollbar-color: var(--destructive);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
 }
 
 /* ===== TEXT SELECTION (DARK UI FIX) ===== */
@@ -64,43 +63,39 @@ body {
   --font-sans: var(--font-inter), var(--font-hind-siliguri), sans-serif;
   --font-heading: var(--font-inter), var(--font-hind-siliguri), sans-serif;
 
-  --color-primary: var(--primary);
-
+  /* === BRAND & SEMANTIC COLORS === */
   --color-primary: var(--primary);
   --color-primary-dark: var(--primaryDark);
   --color-primary-foreground: var(--primary-foreground);
 
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
   --color-destructive-soft: var(--destructiveSoft);
-  /* success */
+
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-success-soft: var(--successSoft);
   --color-success-soft-foreground: var(--successSoft-foreground);
 
-  /* === CORE COLORS === */
-  --color-background: var(--background); /* Main background color */
-  --color-foreground: var(--foreground); /* Main text color */
-  --color-card: var(--card); /* Card background */
-  --color-card-foreground: var(--card-foreground); /* Card text */
-  --color-popover: var(--popover); /* Popover background */
-  --color-popover-foreground: var(--popover-foreground); /* Popover text */
-
-  /* === SEMANTIC COLORS === */
-  --color-primary: var(--primary); /* Primary brand color */
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary); /* Secondary color */
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted); /* Muted/subtle background */
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent); /* Accent color */
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive); /* Error/danger color */
+  /* === CORE SURFACES & ELEMENTS === */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --color-soft-white: var(--soft-white);
-
-  /* === INTERFACE ELEMENTS === */
-  --color-border: var(--border); /* Default border color */
-  --color-input: var(--input); /* Input field backgrounds */
-  --color-ring: var(--ring); /* Focus ring color */
 
   /* === CHART COLORS === */
   /* Predefined colors for data visualization */
@@ -178,7 +173,7 @@ body {
   /* === UI ELEMENTS === */
   --border: #e5e5df; /* Border Gray */
   --input: #ffffff;
-  --ring: #b66a43;
+  --ring: #24483d;
 
   /* === CHART COLORS (brand-aligned) === */
   --chart-1: #24483d; /* Forest Green */
@@ -223,7 +218,7 @@ body {
   --soft-white: #faf9f6;
   --border: #e5e5df;
   --input: #ffffff;
-  --ring: #b66a43;
+  --ring: #24483d;
   --chart-1: #24483d;
   --chart-2: #b66a43;
   --chart-3: #dde8df;

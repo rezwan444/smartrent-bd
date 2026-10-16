@@ -62,34 +62,38 @@ export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed left-0 top-0 h-screen bg-background  border-r   transition-all duration-300 z-40 lg:relative lg:z-0 ${
+        className={`fixed left-0 top-0 h-screen bg-background border-r border-border transition-all duration-300 z-40 lg:relative lg:z-0 ${
           isOpen ? "w-64" : "-translate-x-full lg:translate-x-0"
         } ${isCollapsed ? "lg:w-20" : "lg:w-64"}`}
       >
         <div className="flex flex-col h-full">
-          <div className="h-16 flex items-center justify-between px-4 border-b ">
+          <div className="h-16 flex items-center justify-between px-4 border-b border-border">
             <div
-              className={`flex items-center gap-3 ${
+              className={`flex items-center ${
                 isCollapsed ? "lg:justify-center lg:w-full" : ""
               }`}
             >
               <Link
                 href="/dashboard/admin"
-                className="flex items-center gap-3 min-w-0"
+                className={`flex items-center min-w-0 ${
+                  isCollapsed ? "justify-center" : ""
+                }`}
               >
                 {/* LOGO */}
                 <Image
                   src={WEBSITE_DETAILS.SITE_LOGO}
-                  alt="GOFL"
-                  width={70}
-                  height={70}
+                  alt="SmartRent BD"
+                  width={160}
+                  height={44}
                   draggable={false}
                   priority
-                  className="shrink-0"
+                  className={`shrink-0 object-contain object-left ${
+                    isCollapsed ? "h-9 w-12 object-center" : "h-10 w-36"
+                  }`}
                 />
 
                 {/* TEXT */}
-                {!isCollapsed && (
+                {/* {!isCollapsed && (
                   <div className="hidden lg:flex flex-col justify-center leading-none">
                     <span className="text-sm font-semibold text-foreground tracking-wide">
                       {WEBSITE_DETAILS.SITE_DASHBOARD_TITLE}
@@ -98,13 +102,13 @@ export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
                       {WEBSITE_DETAILS.SITE_DASHBOARD_SUBTITLE}
                     </span>
                   </div>
-                )}
+                )} */}
               </Link>
             </div>
 
             <button
               onClick={onClose}
-              className="lg:hidden text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              className="lg:hidden text-foreground/70 hover:text-foreground"
               aria-label="Close sidebar"
             >
               <Icons.X className="w-5 h-5" />
@@ -121,8 +125,8 @@ export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
                   onClick={() => onClose()}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                     isActive
-                      ? "bg-destructive text-foreground"
-                      : "text-foreground/90 hover:bg-destructive/30 "
+                      ? "bg-primary text-primary-foreground"
+                      : "text-foreground/90 hover:bg-secondary "
                   } ${isCollapsed ? "lg:justify-center lg:px-2" : ""}`}
                   title={isCollapsed ? item.label : undefined}
                 >
