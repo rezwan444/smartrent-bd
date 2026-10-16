@@ -94,15 +94,16 @@ export default function AdminLoginPage() {
           <div className="px-8 pt-8 text-center space-y-2">
             <SiteBrand
               logo={WEBSITE_DETAILS.SITE_LOGO}
-              name={WEBSITE_DETAILS.SITE_ONLY_NAME}
-              description={WEBSITE_DETAILS.SITE_DESCRIPTION}
+              //   name={WEBSITE_DETAILS.SITE_ONLY_NAME}
+              //   description={WEBSITE_DETAILS.SITE_DESCRIPTION}
+              logoSize={200}
               className="flex items-center justify-center"
             />
 
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            <h1 className="hidden text-2xl font-semibold tracking-tight text-foreground">
               Admin Login
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="hidden text-sm text-muted-foreground">
               Admin access only. All actions are logged for security.
             </p>
           </div>

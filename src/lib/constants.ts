@@ -102,16 +102,16 @@ export const SIDEBAR_ITEMS = [
 ];
 
 // website details like name, url, logo , etc
-// THIS IS A GAMING PLATFORM INCLUDING STREAMING FEATURES, PLAYER, SPONSOR, WAITLIST, REPORT, ETC.
+// SmartRent BD is a student-focused rental housing and roommate-matching platform.
 export const WEBSITE_DETAILS = {
-  SITE_NAME: "GOFL - Gaming Platform",
-  SITE_ONLY_NAME: "GOFL",
-  SITE_DESCRIPTION: "GAMERS ONLINE FOOTBALL LEAGUE",
-  SITE_DESC: "Gaming Platform",
-  SITE_DASHBOARD_TITLE: "GOFL Admin Portal",
-  SITE_DASHBOARD_SUBTITLE: "GAMERS ONLINE FOOTBALL LEAGUE",
-  SITE_LOGO: "/cleveljackson-logo-large.png",
-  // SITE_FAVICON: "/cleveljackson-favicon.png",
+  SITE_NAME: "SmartRent BD",
+  SITE_ONLY_NAME: "SmartRent BD",
+  SITE_DESCRIPTION: "Find Your Place. Feel at Home.",
+  SITE_DESC: "Student Rental Housing & Roommate Matching",
+  SITE_DASHBOARD_TITLE: "SmartRent BD Admin Portal",
+  SITE_DASHBOARD_SUBTITLE: "Student Rental Housing & Roommate Matching",
+  SITE_LOGO: "/smartrent-bd.png",
+  // SITE_FAVICON: "/demo-favicon.png",
   AVATAR1: "/placeholder/avatar1.jpg",
   AVATAR2: "/placeholder/avatar2.jpg",
 };

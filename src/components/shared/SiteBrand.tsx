@@ -3,7 +3,7 @@ import Image from "next/image";
 
 interface SiteBrandProps {
   logo: string;
-  name: string;
+  name?: string;
   description?: string;
   logoSize?: number;
   className?: string;

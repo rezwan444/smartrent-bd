@@ -134,7 +134,6 @@ export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
               );
             })}
           </nav>
-
           <div className="p-4 border-t">
             {/* <LogoutButton isCollapsed={isCollapsed} /> */}
             <LogoutButton isCollapsed={isCollapsed} />

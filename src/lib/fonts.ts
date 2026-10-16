@@ -1,17 +1,15 @@
-// lib/fonts.ts
-import { Inter, Oswald, Roboto } from "next/font/google";
+import { Hind_Siliguri, Inter } from "next/font/google";
 
 export const fontSans = Inter({
   subsets: ["latin"],
-  variable: "--font-sans",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
-export const fontMono = Roboto({
-  subsets: ["latin"],
-  variable: "--font-mono",
-});
-
-export const fontHeading = Oswald({
-  subsets: ["latin"],
-  variable: "--font-heading",
+export const fontBengali = Hind_Siliguri({
+  subsets: ["bengali", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-hind-siliguri",
+  display: "swap",
 });

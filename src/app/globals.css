@@ -61,10 +61,8 @@ body {
  */
 @theme inline {
   /* === TYPOGRAPHY === */
-  /* --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono); */
-  --font-sans: var(--font-roboto);
-  --font-heading: var(--font-heading);
+  --font-sans: var(--font-inter), var(--font-hind-siliguri), sans-serif;
+  --font-heading: var(--font-inter), var(--font-hind-siliguri), sans-serif;
 
   --color-primary: var(--primary);
 
@@ -249,7 +247,8 @@ body {
 @layer base {
   /* === UNIVERSAL STYLES === */
   body {
-    font-family: var(--font-sans), system-ui, sans-serif;
+    font-family: var(--font-inter), var(--font-hind-siliguri), system-ui, sans-serif;
+    line-height: 1.5;
   }
   * {
     /* Apply border and ring colors to all elements */
@@ -274,11 +273,16 @@ body {
     transition-duration: 200ms;
     transition-timing-function: ease-in-out;
   }
+
+  :where(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-heading), var(--font-hind-siliguri), system-ui, sans-serif;
+    line-height: 1.2;
+  }
 }
 
 @layer utilities {
   .font-heading {
-    font-family: var(--font-heading), system-ui, sans-serif;
+    font-family: var(--font-heading), var(--font-hind-siliguri), system-ui, sans-serif;
   }
 
   /* === PRIMARY === */
