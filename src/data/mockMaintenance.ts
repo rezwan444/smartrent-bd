@@ -1,0 +1,63 @@
+import { MaintenanceRequest } from "@/types/maintenance";
+
+export const INITIAL_MAINTENANCE_REQUESTS: MaintenanceRequest[] = [
+  {
+    id: "maint-01",
+    tenantId: "demo-student-01",
+    tenantName: "Rayhan Ahmed",
+    tenantPhone: "+880 1712-345678",
+    propertyId: "prop-01",
+    propertyTitle: "Padma Nilkhet Student Flat - 4B",
+    roomNumber: "Kitchen & Corridor",
+    category: "gas",
+    urgency: "high",
+    title: "Kitchen LP Gas Regulator Leakage",
+    description:
+      "A mild gas odor is noticeable near the cylinder pipe connector in the kitchen. Needs washer replacement or hose inspection immediately.",
+    status: "in_progress",
+    createdAt: "2026-10-15 11:30 AM",
+    updatedAt: "2026-10-16 02:15 PM",
+    ownerNotes:
+      "Caretaker Motiur Bhai contacted Omera Gas technician. He will arrive Saturday at 4:00 PM.",
+    technicianName: "Motiur Rahman (Caretaker)",
+    estimatedResolution: "Tomorrow by 5:00 PM",
+  },
+  {
+    id: "maint-02",
+    tenantId: "demo-student-01",
+    tenantName: "Rayhan Ahmed",
+    tenantPhone: "+880 1712-345678",
+    propertyId: "prop-01",
+    propertyTitle: "Padma Nilkhet Student Flat - 4B",
+    roomNumber: "Bedroom 2 (Tanvir)",
+    category: "wifi",
+    urgency: "medium",
+    title: "Carnival Fiber WiFi Router Frequent Disconnection",
+    description:
+      "The shared 50 Mbps router in the common hall drops connection every 30 minutes during evening study hours. Requires router firmware restart or ISP fiber line check.",
+    status: "resolved",
+    createdAt: "2026-10-10 09:00 AM",
+    updatedAt: "2026-10-11 04:00 PM",
+    ownerNotes: "Carnival support technician replaced the optical patch cord. Speeds verified at 52 Mbps.",
+    technicianName: "Carnival Support Team",
+    estimatedResolution: "Completed Oct 11",
+  },
+  {
+    id: "maint-03",
+    tenantId: "demo-student-01",
+    tenantName: "Rayhan Ahmed",
+    tenantPhone: "+880 1712-345678",
+    propertyId: "prop-01",
+    propertyTitle: "Padma Nilkhet Student Flat - 4B",
+    roomNumber: "Common Bathroom",
+    category: "plumbing",
+    urgency: "medium",
+    title: "Washbasin Tap Dripping & Low Water Pressure",
+    description:
+      "The tap valve does not close completely, dripping constantly and wasting water. Roof overhead tank motor line pressure is also low in the morning.",
+    status: "pending",
+    createdAt: "2026-10-17 08:30 AM",
+    updatedAt: "2026-10-17 08:30 AM",
+    ownerNotes: "Acknowledged. Plumber scheduled for Sunday morning.",
+  },
+];

@@ -13,6 +13,8 @@ import {
   GraduationCap,
   Users,
   Sparkles,
+  DollarSign,
+  Wrench,
 } from "lucide-react";
 
 export default function StudentDashboardPage() {
@@ -213,6 +215,66 @@ export default function StudentDashboardPage() {
         >
           <Sparkles className="w-3.5 h-3.5" />
           <span>Explore Directory</span>
+        </Link>
+      </div>
+
+      {/* Shared Expenses & Mess Account Quick Banner */}
+      <div className="bg-card border border-border rounded-xs p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3.5">
+          <div className="w-10 h-10 rounded-xs bg-secondary text-primary flex items-center justify-center shrink-0">
+            <DollarSign className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-sm font-bold text-foreground font-heading">
+                Shared Expense & Mess Ledger
+              </h3>
+              <span className="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded-xs bg-secondary text-primary border border-primary/20">
+                Padma Flat 4B
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Track October flat rent, electricity tokens, dynamic mess meal rates, and who-owes-whom settlement balances.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/dashboard/student/expenses"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shrink-0 shadow-2xs"
+        >
+          <DollarSign className="w-3.5 h-3.5" />
+          <span>Manage Expenses</span>
+        </Link>
+      </div>
+
+      {/* Maintenance & Saved Search Alerts Quick Banner (Feature 10) */}
+      <div className="bg-card border border-border rounded-xs p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3.5">
+          <div className="w-10 h-10 rounded-xs bg-secondary text-primary flex items-center justify-center shrink-0">
+            <Wrench className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-sm font-bold text-foreground font-heading">
+                Flat Maintenance & Search Alerts
+              </h3>
+              <span className="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded-xs bg-secondary text-primary border border-primary/20">
+                Track C3
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Submit household repair tickets, track landlord progress, and manage automated room match notifications.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/dashboard/student/maintenance"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shrink-0 shadow-2xs"
+        >
+          <Wrench className="w-3.5 h-3.5" />
+          <span>View Repairs & Alerts</span>
         </Link>
       </div>
 

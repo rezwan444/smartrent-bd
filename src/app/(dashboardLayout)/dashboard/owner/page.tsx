@@ -15,6 +15,9 @@ import {
   ArrowRight,
   ShieldCheck,
   Eye,
+  Wrench,
+  Clock,
+  Check,
 } from "lucide-react";
 
 export default function OwnerDashboardPage() {
@@ -56,6 +59,38 @@ export default function OwnerDashboardPage() {
       action === "approve"
         ? "Visit request approved! Confirmation SMS simulated."
         : "Visit request declined."
+    );
+  };
+
+  const [maintenanceTickets, setMaintenanceTickets] = useState([
+    {
+      id: "maint-01",
+      propertyTitle: "Master Bed in Dhanmondi 27",
+      tenantName: "Tanvir Hasan",
+      issue: "Kitchen Gas Regulator & Hose Leakage",
+      urgency: "High",
+      status: "in_progress",
+      date: "Oct 16",
+    },
+    {
+      id: "maint-03",
+      propertyTitle: "Furnished Mess Seat near Campus",
+      tenantName: "Sajjad Ali",
+      issue: "Common Washbasin Tap Dripping Constantly",
+      urgency: "Medium",
+      status: "pending",
+      date: "Oct 17",
+    },
+  ]);
+
+  const handleMaintAction = (id: string, newStatus: "in_progress" | "resolved") => {
+    setMaintenanceTickets((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
+    );
+    toast.success(
+      newStatus === "in_progress"
+        ? "Technician assigned! Tenant notified."
+        : "Maintenance ticket marked as resolved."
     );
   };
 
@@ -211,6 +246,80 @@ export default function OwnerDashboardPage() {
                     }`}
                   >
                     {req.status === "approved" ? "Visit Approved" : "Visit Declined"}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Tenant Maintenance & Repair Requests (Feature 10) */}
+      <div className="bg-card border border-border rounded-xs p-5 shadow-2xs space-y-4">
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <div className="flex items-center gap-2">
+            <Wrench className="w-4 h-4 text-primary" />
+            <h2 className="text-sm font-bold text-foreground font-heading">
+              Tenant Maintenance & Repair Requests
+            </h2>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {maintenanceTickets.filter((t) => t.status !== "resolved").length} active repairs
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          {maintenanceTickets.map((ticket) => (
+            <div
+              key={ticket.id}
+              className="border border-border rounded-xs p-4 bg-background flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            >
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs sm:text-sm font-bold text-foreground">
+                    {ticket.issue}
+                  </h3>
+                  <span
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-xs ${
+                      ticket.urgency === "High"
+                        ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                        : "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                    }`}
+                  >
+                    {ticket.urgency} Urgency
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Property: <strong className="text-foreground">{ticket.propertyTitle}</strong> • Reported by: {ticket.tenantName}
+                </p>
+                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Clock className="w-3 h-3 text-primary" />
+                  <span>Reported on {ticket.date}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {ticket.status === "pending" ? (
+                  <button
+                    type="button"
+                    onClick={() => handleMaintAction(ticket.id, "in_progress")}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-primary hover:bg-primary-dark text-primary-foreground rounded-xs transition-colors shadow-2xs cursor-pointer"
+                  >
+                    <Wrench className="w-3.5 h-3.5" />
+                    <span>Assign Technician</span>
+                  </button>
+                ) : ticket.status === "in_progress" ? (
+                  <button
+                    type="button"
+                    onClick={() => handleMaintAction(ticket.id, "resolved")}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xs transition-colors shadow-2xs cursor-pointer"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Mark Resolved</span>
+                  </button>
+                ) : (
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    Resolved & Closed
                   </span>
                 )}
               </div>

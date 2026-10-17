@@ -22,6 +22,20 @@ export const SIDEBAR_ITEMS = [
     icon: "Users",
     roles: ["STUDENT", "CUSTOMER", "ADMIN"],
   },
+  {
+    id: "student-expenses",
+    label: "Shared Expenses & Mess",
+    href: "/dashboard/student/expenses",
+    icon: "LuDollarSign",
+    roles: ["STUDENT", "CUSTOMER", "ADMIN"],
+  },
+  {
+    id: "student-maintenance",
+    label: "Maintenance & Alerts",
+    href: "/dashboard/student/maintenance",
+    icon: "CalendarCheck",
+    roles: ["STUDENT", "CUSTOMER", "ADMIN"],
+  },
   // ===== PROPERTY OWNER =====
   {
     id: "owner-dashboard",

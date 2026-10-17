@@ -67,7 +67,7 @@ export function PropertyDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl h-[90dvh] max-h-[850px]">
+      <DialogContent className="w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl h-[90dvh] max-h-[850px] p-0">
         {/* 1. Sticky Header */}
         <DialogHeader className="p-3.5 sm:p-5 border-b border-border bg-background shrink-0 pr-12">
           <div className="space-y-1">

@@ -32,6 +32,15 @@ export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
     item.roles.includes(activeRole)
   );
 
+  const dashboardHomeHref =
+    activeRole === "STUDENT" ||
+    activeRole === "CUSTOMER" ||
+    pathname.includes("/student")
+      ? "/dashboard/student"
+      : activeRole === "OWNER" || pathname.includes("/owner")
+      ? "/dashboard/owner"
+      : "/dashboard/admin";
+
   const getIcon = (iconName: string) => {
     const iconMap: Record<string, React.ReactNode> = {
       LayoutDashboard: <Icons.LayoutDashboard className="w-5 h-5" />, // dashboard
@@ -79,7 +88,7 @@ export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
               }`}
             >
               <Link
-                href="/dashboard/admin"
+                href={dashboardHomeHref}
                 className={`flex items-center min-w-0 ${
                   isCollapsed ? "justify-center" : ""
                 }`}

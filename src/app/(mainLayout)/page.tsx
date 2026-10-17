@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import AdminHome from "@/components/dashboard/pages/admin/AdminHome/AdminHome";
+import { HomePageClient } from "@/components/dashboard/pages/admin/AdminHome/HomePageClient";
 
 export const metadata: Metadata = {
   title: "SmartRent BD — Student Rental Housing & Roommate Matching",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <AdminHome />;
+  return <HomePageClient />;
 }

@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { IRole } from "@/types/global";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Icons } from "../../utils/icons";
@@ -23,8 +23,26 @@ export function Header({
   onCollapseToggle,
 }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
+
+  const activeRole =
+    (user?.role as string) ||
+    (pathname.includes("/student")
+      ? "STUDENT"
+      : pathname.includes("/owner")
+      ? "OWNER"
+      : "ADMIN");
+
+  const dashboardHomeHref =
+    activeRole === "STUDENT" ||
+    activeRole === "CUSTOMER" ||
+    pathname.includes("/student")
+      ? "/dashboard/student"
+      : activeRole === "OWNER" || pathname.includes("/owner")
+      ? "/dashboard/owner"
+      : "/dashboard/admin";
 
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -57,7 +75,7 @@ export function Header({
       <div className="flex items-center gap-4">
         <div className="lg:hidden rounded-md px-2">
           <Link
-            href={"/dashboard/admin"}
+            href={dashboardHomeHref}
             className="rounded-lg text-blue-600 flex items-center justify-center font-bold"
           >
             <Image
@@ -216,7 +234,7 @@ export function Header({
                 ) : (
                   <button
                     onClick={() => {
-                      router.push("/dashboard/admin");
+                      router.push(dashboardHomeHref);
                       setShowDropdown(false);
                     }}
                     className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm  hover:bg-foreground/10  transition-colors hover:cursor-pointer"
