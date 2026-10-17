@@ -11,6 +11,21 @@ export type PropertyFacility =
   | "cctv"
   | "kitchen";
 
+export interface PropertyOwner {
+  name: string;
+  role: "Landlord" | "Property Manager" | "Current Roommate" | "Hostel Warden";
+  isVerified: boolean;
+  memberSince?: string;
+  responseTime?: string;
+  phone?: string;
+}
+
+export interface PropertyLandmark {
+  name: string;
+  distance: string;
+  category: "transit" | "campus" | "hospital" | "market";
+}
+
 export interface IProperty {
   id: string;
   title: string;
@@ -28,6 +43,7 @@ export interface IProperty {
   keywordsBangla?: string[];
   rent: number; // In BDT
   serviceCharge?: number;
+  securityDeposit?: number; // In BDT
   bedrooms?: number;
   bathrooms?: number;
   balconies?: number;
@@ -42,6 +58,13 @@ export interface IProperty {
   featuredImage: string;
   genderPreference?: "any" | "male_only" | "female_only" | "family_only";
   tenantType?: "students" | "bachelors" | "job_holders" | "family" | "any";
+  houseRules?: string[];
+  owner?: PropertyOwner;
+  nearbyLandmarks?: PropertyLandmark[];
+  mapCoordinates?: {
+    lat: number;
+    lng: number;
+  };
   description: string;
   createdAt: string;
 }

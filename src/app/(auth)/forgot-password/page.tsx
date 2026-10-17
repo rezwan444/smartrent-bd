@@ -1,149 +1,203 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { SiteBrand } from "@/components/shared/SiteBrand";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { WEBSITE_DETAILS } from "@/lib/constants";
-import { useForgotPasswordMutation } from "@/redux/api/auth/authApi";
-import { setResetPassToken } from "@/redux/features/user/authSlice";
-import { setEmail } from "@/redux/features/verifyAuth/verifyAuth";
-import { useAppDispatch } from "@/redux/hook";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
 
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
+import {
+  Mail,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle2,
+  Info,
+  ShieldCheck,
+} from "lucide-react";
+import { AuthSidePanel } from "@/components/auth/AuthSidePanel";
+
+const forgotSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email address is required")
+    .email("Please enter a valid email address"),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type ForgotFormData = z.infer<typeof forgotSchema>;
 
 export default function ForgotPasswordPage() {
-  const dispatch = useAppDispatch();
-  const [resetPassword, { isLoading: isForgottingAndOTPSending }] =
-    useForgotPasswordMutation();
+  const [isSubmittingForm, setIsSubmittingForm] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
 
-  const router = useRouter();
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-    },
+    reset,
+    formState: { errors },
+  } = useForm<ForgotFormData>({
+    resolver: zodResolver(forgotSchema),
+    defaultValues: { email: "" },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
-    // Simulate API call
-    // await new Promise((resolve) => setTimeout(resolve, 1000));
-    try {
-      const result = await resetPassword({ email: data.email }).unwrap();
-      //   console.log(result);
+  const onSubmit = async (data: ForgotFormData) => {
+    setIsSubmittingForm(true);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    setIsSubmittingForm(false);
+    setSubmittedEmail(data.email);
+    toast.info("Password reset simulated (Demo Preview)");
+  };
 
-      if (result?.success && result?.data?.verificationToken) {
-        toast.success(result?.message);
-        dispatch(setEmail(data.email));
-        dispatch(setResetPassToken(result.data.verificationToken));
-        router.replace("/verify-email");
-      }
-    } catch (error: any) {
-      //   console.log(error);
-      const errMsg =
-        error?.message || error?.data?.message || "Something went wrong";
-      toast.error(errMsg);
-    }
-    // console.log("Login attempt:", data);
-    // localStorage.setItem("verify-email", data?.email);
-    // Add login logic here
+  const handleReset = () => {
+    setSubmittedEmail(null);
+    reset();
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0b0b0b] px-4">
-      <div className="w-full max-w-lg">
-        {/* Card */}
-        <div className="rounded-2xl bg-[#3a3a3a] border border-[#2a2a2a] shadow-2xl">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-background text-foreground">
+      {/* Brand Hero Panel (Desktop) */}
+      <AuthSidePanel
+        heading="Secure account recovery for SmartRent BD"
+        subheading="Reset your account password quickly to regain access to your saved listings, visit requests, and rental agreements."
+      />
+
+      {/* Right Column: Clean, Compact Form */}
+      <div className="col-span-1 lg:col-span-7 xl:col-span-7 flex flex-col justify-center items-center px-4 py-8 sm:px-8 sm:py-12 lg:px-12">
+        <div className="w-full max-w-[420px] mx-auto space-y-4">
+          {/* Mobile-only logo */}
+          <div className="lg:hidden text-center pb-2">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 group cursor-pointer focus:outline-hidden"
+              aria-label="SmartRent BD Home"
+            >
+              <Image
+                src="/smartrent-bd.png"
+                alt="SmartRent BD"
+                width={150}
+                height={38}
+                priority
+                className="h-8 w-auto object-contain mx-auto"
+              />
+            </Link>
+          </div>
+
           {/* Header */}
-          <div className="px-8 pt-8 text-center space-y-2">
-            <SiteBrand
-              logo={WEBSITE_DETAILS.SITE_LOGO}
-              name={WEBSITE_DETAILS.SITE_ONLY_NAME}
-              description={WEBSITE_DETAILS.SITE_DESCRIPTION}
-              className="flex items-center justify-center"
-            />
-
-            <h1 className="text-xl font-semibold text-white">
-              Forgot your <br /> admin password?
+          <div className="space-y-1">
+            <h1 className="text-xl sm:text-2xl font-bold font-heading text-foreground tracking-tight">
+              Reset Your Password
             </h1>
-
-            <p className="text-sm text-gray-300">
-              Enter your email and we&apos;ll send you a 4-digit code
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Enter your registered email address to receive recovery instructions
             </p>
           </div>
 
-          {/* Form */}
-          <div className="p-8">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Email */}
-              <div>
-                <label className="block text-sm mb-2 text-gray-200">
-                  Email
-                </label>
+          {submittedEmail ? (
+            /* Confirmation State (Demo Mode) */
+            <div className="space-y-4 py-2">
+              <div className="w-11 h-11 rounded-full bg-secondary text-primary mx-auto flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+              </div>
 
+              <div className="text-center space-y-1">
+                <h2 className="text-sm font-bold text-foreground font-heading">
+                  Demo Recovery Simulated
+                </h2>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  We simulated recovery instructions for{" "}
+                  <strong className="text-foreground">{submittedEmail}</strong>.
+                </p>
+              </div>
+
+              <div className="rounded-xs border border-primary/20 bg-secondary/40 p-3 text-xs text-muted-foreground space-y-1">
+                <div className="flex items-center gap-1.5 font-semibold text-primary text-[11px]">
+                  <Info className="w-3.5 h-3.5 shrink-0" />
+                  <span>Prototype Notice</span>
+                </div>
+                <p className="text-[11px] leading-relaxed">
+                  No real email is dispatched in client demo mode. You can return to the sign in page and test with any demo credentials.
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <Link
+                  href="/login"
+                  className="w-full h-10 inline-flex items-center justify-center gap-2 px-4 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shadow-2xs"
+                >
+                  <span>Return to Sign In</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="w-full h-10 inline-flex items-center justify-center gap-1.5 px-4 text-xs font-medium text-foreground bg-card hover:bg-secondary/40 border border-border rounded-xs transition-colors cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Try Another Email</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Form */
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">
+              <div className="space-y-1">
+                <label
+                  htmlFor="email"
+                  className="text-xs font-semibold text-foreground block"
+                >
+                  Email Address
+                </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
+                  <Mail className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    id="email"
                     type="email"
-                    placeholder="admin@smartrentbd.com"
+                    autoComplete="email"
+                    placeholder="name@example.com"
                     {...register("email")}
-                    className="h-12 pl-10 border-primary-dark
-      focus:border-destructive
-      focus:outline-none
-      focus:ring-0
-      focus:ring-offset-0
-      focus-visible:border-destructive
-      focus-visible:outline-none
-      focus-visible:ring-0
-      focus-visible:ring-offset-0
-      transition-colors
-      duration-200
-      ease-in-out;"
+                    className={`w-full h-10 pl-9 pr-3 text-xs rounded-xs border bg-card text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 transition-colors ${
+                      errors.email
+                        ? "border-destructive focus:ring-destructive"
+                        : "border-border focus:border-primary focus:ring-primary/20"
+                    }`}
                   />
                 </div>
-
                 {errors.email && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.email.message}
-                  </p>
+                  <p className="text-[11px] text-destructive">{errors.email.message}</p>
                 )}
               </div>
 
-              {/* Buttons */}
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.back()}
-                  className="h-11 rounded-lg border border-[#5a5a5a] bg-transparent text-gray-200! hover:bg-[#4a4a4a]"
-                >
-                  Back
-                </Button>
+              <button
+                type="submit"
+                disabled={isSubmittingForm}
+                className="w-full h-10 inline-flex items-center justify-center gap-2 px-5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shadow-2xs cursor-pointer disabled:opacity-60"
+              >
+                <span>
+                  {isSubmittingForm
+                    ? "Sending Instructions..."
+                    : "Send Recovery Instructions"}
+                </span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
 
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || isForgottingAndOTPSending}
-                  className="h-11 rounded-lg bg-[#e10613] hover:bg-[#b9050f] text-white font-medium disabled:opacity-60"
+              <div className="text-center pt-2">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
                 >
-                  {isSubmitting || isForgottingAndOTPSending
-                    ? "Sending..."
-                    : "Send Email"}
-                </Button>
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back to Sign In</span>
+                </Link>
               </div>
             </form>
+          )}
+
+          {/* Security note */}
+          <div className="pt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+            <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+            <span>End-to-end secured • Zero broker charges</span>
           </div>
         </div>
       </div>

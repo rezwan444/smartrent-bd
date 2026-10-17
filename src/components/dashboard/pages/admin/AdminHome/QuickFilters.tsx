@@ -83,7 +83,7 @@ export function QuickFilters({
           {/* Quick Facility Buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-1 hidden sm:inline">
-              ফিল্টার:
+              Filters:
             </span>
 
             {primaryFacilities.map((facId) => {
@@ -122,7 +122,7 @@ export function QuickFilters({
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>অন্যান্য সুবিধা (More)</span>
+              <span>More Filters</span>
               {(onlyVerified || genderPreference !== "any") && (
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
               )}
@@ -137,7 +137,7 @@ export function QuickFilters({
               className="inline-flex items-center gap-1 text-xs font-semibold text-destructive hover:text-accent transition-colors shrink-0 cursor-pointer ml-auto"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>রিসেট ({activeFilterCount})</span>
+              <span>Reset ({activeFilterCount})</span>
             </button>
           )}
         </div>
@@ -151,7 +151,7 @@ export function QuickFilters({
                 htmlFor="gender-filter-select"
                 className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wider"
               >
-                ভাড়াটিয়া ক্যাটাগরি (Tenant Type)
+                Tenant Category
               </label>
               <Select
                 value={genderPreference}
@@ -168,15 +168,15 @@ export function QuickFilters({
                   <SelectValue placeholder="Select preference" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border border-border rounded-xs shadow-md">
-                  <SelectItem value="any">সকলের জন্য উন্মুক্ত (Any / All)</SelectItem>
-                  <SelectItem value="male_only">ছাত্র বা পুরুষ ব্যাচেলর (Male Only)</SelectItem>
-                  <SelectItem value="female_only">ছাত্রী বা কর্মজীবী নারী (Female Only)</SelectItem>
-                  <SelectItem value="family_only">শুধুমাত্র ফ্যামিলি (Family Only)</SelectItem>
+                  <SelectItem value="any">Open to Anyone (All Tenants)</SelectItem>
+                  <SelectItem value="male_only">Male Students / Bachelors</SelectItem>
+                  <SelectItem value="female_only">Female Students / Job Holders</SelectItem>
+                  <SelectItem value="family_only">Family Only</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Verified Badge Toggle using reusable AppCheckbox (ZERO NATIVE TAGS) */}
+            {/* Verified Badge Toggle using reusable AppCheckbox */}
             <div className="flex items-center">
               <AppCheckbox
                 id="verified-listings-filter"
@@ -186,7 +186,7 @@ export function QuickFilters({
                 label={
                   <span className="text-xs font-medium text-foreground flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-primary" />
-                    যাচাইকৃত বাসা (Verified Listings Only)
+                    Verified Listings Only
                   </span>
                 }
               />
@@ -200,7 +200,7 @@ export function QuickFilters({
                 className="inline-flex items-center gap-1 px-4 py-2 text-xs font-medium text-foreground bg-background border border-border rounded-xs hover:bg-secondary/40 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
-                <span>বন্ধ করুন (Done)</span>
+                <span>Close</span>
               </button>
             </div>
           </div>

@@ -24,11 +24,11 @@ export default function ResetSuccessPage() {
   }, [dispatch]);
 
   return (
-    <div className="min-h-screen bg-[#0b0b0b] px-4 overflow-y-auto">
+    <div className="min-h-screen bg-background text-foreground px-4 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center py-10">
         <div className="w-full max-w-lg">
           {/* Card */}
-          <div className="rounded-2xl bg-[#3a3a3a] border border-[#2a2a2a] shadow-2xl">
+          <div className="rounded-xs bg-card border border-border shadow-xs">
             {/* Header */}
 
             {/* Content */}
@@ -47,7 +47,7 @@ export default function ResetSuccessPage() {
 
               {/* Text */}
               <div className="space-y-2">
-                <h1 className="text-2xl font-semibold text-white">
+                <h1 className="text-2xl font-semibold text-foreground font-heading">
                   Password Reset Successful
                 </h1>
                 <p className="text-center max-w-xs mx-auto text-sm text-muted-foreground leading-relaxed">
@@ -60,7 +60,7 @@ export default function ResetSuccessPage() {
               <Button
                 onClick={handleRedirect}
                 disabled={isSubmitting}
-                className="w-full h-11 rounded-lg bg-[#e10613] hover:bg-[#b9050f] text-white font-medium disabled:opacity-60 relative overflow-hidden"
+                className="w-full h-11 rounded-xs bg-primary hover:bg-primary-dark text-primary-foreground font-medium disabled:opacity-60 relative overflow-hidden cursor-pointer"
               >
                 {isSubmitting && (
                   <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent animate-shimmer" />

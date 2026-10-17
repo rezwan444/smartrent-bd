@@ -33,7 +33,7 @@ export function AppSelect({
   value,
   onValueChange,
   options,
-  placeholder = "নির্বাচন করুন",
+  placeholder = "Select an option",
   className,
   triggerClassName,
   contentClassName,

@@ -110,11 +110,11 @@ export default function ResetPasswordPage() {
   }, [router, emailFromStore]);
 
   return (
-    <div className="min-h-screen bg-[#0b0b0b] px-4 overflow-y-auto">
+    <div className="min-h-screen bg-background text-foreground px-4 overflow-y-auto">
       <div className="flex min-h-screen items-start justify-center py-10 sm:items-center">
         <div className="w-full max-w-lg">
           {/* Card */}
-          <div className="rounded-2xl bg-[#3a3a3a] border border-[#2a2a2a] shadow-2xl">
+          <div className="rounded-xs bg-card border border-border shadow-xs">
             {/* Header */}
             <div className="px-8 pt-8 text-center space-y-2">
               <SiteBrand
@@ -124,11 +124,11 @@ export default function ResetPasswordPage() {
                 className="flex items-center justify-center"
               />
 
-              <h1 className="text-xl font-semibold text-white">
+              <h1 className="text-xl font-semibold text-foreground font-heading">
                 Reset Password
               </h1>
 
-              <p className="text-sm text-gray-300">
+              <p className="text-sm text-muted-foreground">
                 Please enter your new password below.
                 <br />
                 Make sure it&apos;s strong and secure
@@ -240,7 +240,7 @@ export default function ResetPasswordPage() {
                     type="button"
                     variant="outline"
                     onClick={() => router.back()}
-                    className="h-11 rounded-lg border border-[#5a5a5a] bg-transparent text-gray-200 hover:bg-[#4a4a4a]"
+                    className="h-11 rounded-xs border border-border bg-background text-foreground hover:bg-secondary/40 cursor-pointer"
                   >
                     Back
                   </Button>
@@ -248,7 +248,7 @@ export default function ResetPasswordPage() {
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="h-11 rounded-lg bg-[#e10613] hover:bg-[#b9050f] text-white font-medium disabled:opacity-60"
+                    className="h-11 rounded-xs bg-primary hover:bg-primary-dark text-primary-foreground font-medium disabled:opacity-60 cursor-pointer"
                   >
                     {isSubmitting ? "Resetting..." : "Confirm"}
                   </Button>

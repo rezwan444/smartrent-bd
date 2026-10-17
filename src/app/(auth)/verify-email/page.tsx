@@ -195,10 +195,10 @@ export default function VerifyEmailPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0b0b0b] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background text-foreground px-4">
       <div className="w-full max-w-lg">
         {/* Card */}
-        <div className="rounded-2xl bg-[#3a3a3a] border border-[#2a2a2a] shadow-2xl">
+        <div className="rounded-xs bg-card border border-border shadow-xs">
           {/* Header */}
           <div className="px-8 pt-8 text-center space-y-2">
             <SiteBrand
@@ -208,16 +208,16 @@ export default function VerifyEmailPage() {
               className="flex items-center justify-center"
             />
 
-            <h1 className="text-xl font-semibold text-white">Reset password</h1>
+            <h1 className="text-xl font-semibold text-foreground font-heading">Verify Code</h1>
 
-            <p className="text-sm text-gray-300">
+            <p className="text-sm text-muted-foreground">
               Enter the 4-digit code sent to your email
             </p>
           </div>
 
           {/* OTP Section */}
           <div className="p-8 space-y-6">
-            <p className="text-center text-sm text-gray-300">
+            <p className="text-center text-sm text-muted-foreground">
               Verification Code
             </p>
 
@@ -226,7 +226,6 @@ export default function VerifyEmailPage() {
               {otp.map((digit, index) => (
                 <input
                   key={index}
-                  //   ref={(el) => (inputRefs.current[index] = el)}
                   ref={(el) => {
                     inputRefs.current[index] = el;
                   }}
@@ -239,11 +238,11 @@ export default function VerifyEmailPage() {
                   onPaste={handlePaste}
                   className="
                   w-12 h-12 text-center text-lg font-semibold
-                  rounded-lg
-                  bg-[#4a4a4a]
-                  border border-[#5a5a5a]
-                  text-white
-                  focus:border-[#e10613]
+                  rounded-xs
+                  bg-background
+                  border border-border
+                  text-foreground
+                  focus:border-primary
                   focus:outline-none
                   transition-colors
                 "
@@ -253,19 +252,20 @@ export default function VerifyEmailPage() {
 
             {/* Error */}
             {error && (
-              <p className="text-center text-sm text-red-500">{error}</p>
+              <p className="text-center text-xs text-destructive">{error}</p>
             )}
 
             {/* Resend */}
-            <div className="text-center text-sm text-gray-300">
+            <div className="text-center text-sm text-muted-foreground">
               Didn&apos;t get it?{" "}
               <button
+                type="button"
                 onClick={handleResend}
                 disabled={resendCountdown > 0 || isResending}
                 className={`font-medium hover:cursor-pointer transition-colors ${
                   resendCountdown > 0 || isResending
-                    ? "text-gray-500 cursor-not-allowed"
-                    : "text-[#e10613] hover:underline"
+                    ? "text-muted-foreground/50 cursor-not-allowed"
+                    : "text-primary hover:underline"
                 }`}
               >
                 {isResending
@@ -282,15 +282,16 @@ export default function VerifyEmailPage() {
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
-                className="h-11 rounded-lg border border-[#5a5a5a] bg-transparent text-gray-200! hover:bg-[#4a4a4a]"
+                className="h-11 rounded-xs border border-border bg-background text-foreground hover:bg-secondary/40 cursor-pointer"
               >
                 Back
               </Button>
 
               <Button
+                type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting || otp.join("").length !== OTP_LENGTH}
-                className="h-11 rounded-lg bg-[#e10613] hover:bg-[#b9050f] text-white font-medium disabled:opacity-60"
+                className="h-11 rounded-xs bg-primary hover:bg-primary-dark text-primary-foreground font-medium disabled:opacity-60 cursor-pointer"
               >
                 {isSubmitting ? "Verifying..." : "Continue"}
               </Button>

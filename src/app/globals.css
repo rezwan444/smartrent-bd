@@ -318,6 +318,9 @@ body {
 
   /* === ACCENT === */
   .text-accent {
+    color: var(--accent);
+  }
+  .text-accent-foreground {
     color: var(--accent-foreground);
   }
   .bg-accent {

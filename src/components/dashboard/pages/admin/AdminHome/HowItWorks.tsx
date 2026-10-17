@@ -5,22 +5,22 @@ import { Search, Sliders, CheckSquare } from "lucide-react";
 export function HowItWorks() {
   const steps = [
     {
-      num: "০১",
+      num: "01",
       icon: Search,
-      title: "আপনার এলাকা বা ক্যাম্পাস নির্বাচন করুন",
-      desc: "ঢাকা (ফার্মগেট, বনশ্রী, মিরপুর, উত্তরা) কিংবা বগুড়া (সাতমাথা, জলেশ্বরীতলা, আযীযুল হক কলেজ) থেকে আপনার পছন্দের এলাকা বেছে নিন।",
+      title: "Select Location or Campus Hub",
+      desc: "Choose your preferred student area in Dhaka (Banasree, Mirpur, Farmgate, Uttara) or Bogura (Satmatha, Joleshwaritola, Azizul Haque College).",
     },
     {
-      num: "০২",
+      num: "02",
       icon: Sliders,
-      title: "বাজেট ও জরুরি সুবিধা ফিল্টার করুন",
-      desc: "মেস সিট বা রুমের মাসিক ভাড়ার পরিধি এবং ওয়াইফাই, অ্যাটাচড ওয়াশরুম, জেনারেটর বা রান্নার সুবিধার ভিত্তিতে ফলাফল সংকুচিত করুন।",
+      title: "Filter by Budget & Key Amenities",
+      desc: "Narrow down listings by monthly rent range, attached bathroom, high-speed Wi-Fi, generator backup, or kitchen access.",
     },
     {
-      num: "০৩",
+      num: "03",
       icon: CheckSquare,
-      title: "সরেজমিনে যাচাই করে রুম চূড়ান্ত করুন",
-      desc: "বিজ্ঞাপনের তথ্য ও ছবি দেখে বাড়িওয়ালা বা মেস ম্যানেজারের সাথে সরাসরি যোগাযোগ করে রুম পরিদর্শন করুন ও নিরাপদে উঠুন।",
+      title: "Verify & Move In With Confidence",
+      desc: "Review transparent photos and details, schedule an in-person viewing with the owner or manager, and finalize your stay safely.",
     },
   ];
 
@@ -32,10 +32,10 @@ export function HowItWorks() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-heading">
-            স্মার্টরেন্ট বিডি কিভাবে কাজ করে?
+            How SmartRent BD Works
           </h2>
           <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-            ফেসবুক গ্রুপের অস্পষ্ট পোস্ট বা দালালের ঝামেলা ছাড়াই সহজে মেস ও বাসা খোঁজার ৩টি সহজ ধাপ।
+            Find student and bachelor accommodation in 3 simple steps without broker fees or misleading posts.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export function HowItWorks() {
                 <div>
                   <div className="flex items-center justify-between mb-3.5">
                     <span className="text-xs font-mono font-bold text-accent bg-background px-2 py-0.5 rounded-xs border border-border">
-                      ধাপ {step.num}
+                      Step {step.num}
                     </span>
                     <div className="w-7 h-7 rounded-xs bg-secondary text-primary flex items-center justify-center">
                       <Icon className="w-4 h-4" />

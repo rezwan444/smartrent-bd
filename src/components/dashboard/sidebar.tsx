@@ -6,6 +6,7 @@ import { SIDEBAR_ITEMS, WEBSITE_DETAILS } from "@/lib/constants";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAppSelector } from "@/redux/hook";
 import { Icons } from "../../utils/icons";
 import { LogoutButton } from "./LogoutButton";
 
@@ -17,14 +18,18 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const reduxUser = useAppSelector((state) => state.auth.user);
 
-  //   const user = useAppSelector((state) => state.auth.user);
-  const user = {
-    role: "ADMIN",
-  };
+  const activeRole =
+    (reduxUser?.role as string) ||
+    (pathname.includes("/student")
+      ? "STUDENT"
+      : pathname.includes("/owner")
+      ? "OWNER"
+      : "ADMIN");
 
   const visibleItems = SIDEBAR_ITEMS.filter((item) =>
-    item.roles.includes(user?.role || ""),
+    item.roles.includes(activeRole)
   );
 
   const getIcon = (iconName: string) => {

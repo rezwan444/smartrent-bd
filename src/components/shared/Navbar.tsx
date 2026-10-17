@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { WEBSITE_DETAILS } from "@/lib/constants";
@@ -13,6 +14,8 @@ export interface NavbarProps {
 export function Navbar({ onFindPlaceClick }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+  const isHomePage = pathname === "/" || pathname === "";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,24 +37,49 @@ export function Navbar({ onFindPlaceClick }: NavbarProps) {
     };
   }, [mobileMenuOpen]);
 
-  const handlePlacesClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (onFindPlaceClick) {
-      e.preventDefault();
-      onFindPlaceClick();
-    }
+  const handleFindAccommodationClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     setMobileMenuOpen(false);
+    if (isHomePage) {
+      e.preventDefault();
+      if (onFindPlaceClick) {
+        onFindPlaceClick();
+      } else {
+        const el = document.getElementById("explore");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        } else {
+          window.scrollTo({ top: 500, behavior: "smooth" });
+        }
+      }
+      if (typeof window !== "undefined" && window.location.hash !== "#explore") {
+        window.history.pushState(null, "", "/#explore");
+      }
+    }
+  };
+
+  const handleHowItWorksClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    setMobileMenuOpen(false);
+    if (isHomePage) {
+      e.preventDefault();
+      const el = document.getElementById("how-it-works");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+      if (typeof window !== "undefined" && window.location.hash !== "#how-it-works") {
+        window.history.pushState(null, "", "/#how-it-works");
+      }
+    }
   };
 
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    // If already on the homepage, scroll smoothly to the top
-    if (typeof window !== "undefined" && (window.location.pathname === "/" || window.location.pathname === "")) {
+    setMobileMenuOpen(false);
+    if (isHomePage) {
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: "smooth" });
-      if (window.location.hash) {
+      if (typeof window !== "undefined" && window.location.hash) {
         window.history.pushState(null, "", "/");
       }
     }
-    setMobileMenuOpen(false);
   };
 
   return (
@@ -86,40 +114,31 @@ export function Navbar({ onFindPlaceClick }: NavbarProps) {
             aria-label="Primary Navigation"
             className="hidden md:flex items-center gap-1 lg:gap-2"
           >
-            <a
-              href="#explore"
-              onClick={handlePlacesClick}
+            <Link
+              href="/#explore"
+              onClick={handleFindAccommodationClick}
               className="px-3 py-1.5 text-xs lg:text-sm font-medium text-foreground hover:text-primary rounded-xs transition-colors hover:bg-secondary/40"
             >
-              বাসা ও মেস খুঁজুন
-            </a>
+              Find Accommodation
+            </Link>
 
-            <a
-              href="#roommates"
-              onClick={(e) => {
-                e.preventDefault();
-                const el = document.getElementById("roommates");
-                if (el) el.scrollIntoView({ behavior: "smooth" });
-              }}
+            <Link
+              href="/roommates"
               className="px-3 py-1.5 text-xs lg:text-sm font-medium text-foreground hover:text-primary rounded-xs transition-colors hover:bg-secondary/40 flex items-center gap-1.5"
             >
-              <span>রুমমেট ম্যাচিং</span>
+              <span>Roommates</span>
               <span className="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded-xs bg-secondary text-primary border border-primary/25">
                 Beta
               </span>
-            </a>
+            </Link>
 
-            <a
-              href="#how-it-works"
-              onClick={(e) => {
-                e.preventDefault();
-                const el = document.getElementById("how-it-works");
-                if (el) el.scrollIntoView({ behavior: "smooth" });
-              }}
+            <Link
+              href="/#how-it-works"
+              onClick={handleHowItWorksClick}
               className="px-3 py-1.5 text-xs lg:text-sm font-medium text-muted-foreground hover:text-foreground rounded-xs transition-colors hover:bg-secondary/40"
             >
-              ব্যবহার নির্দেশিকা
-            </a>
+              How It Works
+            </Link>
           </nav>
 
           {/* Desktop Actions */}
@@ -128,14 +147,14 @@ export function Navbar({ onFindPlaceClick }: NavbarProps) {
               href="/login"
               className="px-3.5 py-2 text-xs lg:text-sm font-medium text-foreground hover:text-primary transition-colors rounded-xs"
             >
-              লগইন (Sign In)
+              Sign In
             </Link>
 
             <Link
               href="/register"
               className="inline-flex items-center justify-center px-4 py-2 text-xs lg:text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shadow-2xs"
             >
-              অ্যাকাউন্ট খুলুন
+              Create Account
             </Link>
           </div>
 
@@ -169,40 +188,30 @@ export function Navbar({ onFindPlaceClick }: NavbarProps) {
 
           <div className="fixed top-16 inset-x-0 bg-background border-b border-border shadow-md z-40 px-5 pt-3 pb-6 space-y-3">
             <nav className="flex flex-col space-y-1">
-              <a
-                href="#explore"
-                onClick={handlePlacesClick}
+              <Link
+                href="/#explore"
+                onClick={handleFindAccommodationClick}
                 className="px-3 py-2 text-sm font-medium text-foreground rounded-xs hover:bg-secondary/50"
               >
-                বাসা ও মেস খুঁজুন
-              </a>
-              <a
-                href="#roommates"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMobileMenuOpen(false);
-                  const el = document.getElementById("roommates");
-                  if (el) el.scrollIntoView({ behavior: "smooth" });
-                }}
+                Find Accommodation
+              </Link>
+              <Link
+                href="/roommates"
+                onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 text-sm font-medium text-foreground rounded-xs hover:bg-secondary/50 flex items-center justify-between"
               >
-                <span>রুমমেট ম্যাচিং</span>
+                <span>Roommates</span>
                 <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-xs bg-secondary text-primary">
                   Beta
                 </span>
-              </a>
-              <a
-                href="#how-it-works"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMobileMenuOpen(false);
-                  const el = document.getElementById("how-it-works");
-                  if (el) el.scrollIntoView({ behavior: "smooth" });
-                }}
+              </Link>
+              <Link
+                href="/#how-it-works"
+                onClick={handleHowItWorksClick}
                 className="px-3 py-2 text-sm font-medium text-muted-foreground rounded-xs hover:bg-secondary/50"
               >
-                ব্যবহার নির্দেশিকা
-              </a>
+                How It Works
+              </Link>
             </nav>
 
             <div className="pt-3 border-t border-border flex flex-col gap-2">
@@ -211,14 +220,14 @@ export function Navbar({ onFindPlaceClick }: NavbarProps) {
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center py-2 text-sm font-medium text-foreground border border-border rounded-xs hover:bg-background"
               >
-                লগইন (Sign In)
+                Sign In
               </Link>
               <Link
                 href="/register"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center py-2 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs shadow-2xs"
               >
-                অ্যাকাউন্ট খুলুন (Free Account)
+                Create Free Account
               </Link>
             </div>
           </div>

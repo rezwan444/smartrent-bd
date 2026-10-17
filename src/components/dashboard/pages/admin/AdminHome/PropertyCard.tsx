@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   MapPin,
   Bed,
@@ -11,44 +12,41 @@ import {
   Heart,
   Calendar,
   Users,
+  Eye,
 } from "lucide-react";
 import { IProperty, PropertyType } from "@/types/property";
 
 interface PropertyCardProps {
   property: IProperty;
-  onViewDetails: (property: IProperty) => void;
+  onViewDetails?: (property: IProperty) => void;
   isFavorite?: boolean;
   onToggleFavorite?: (propertyId: string) => void;
 }
 
 const TYPE_CONFIG: Record<
   PropertyType,
-  { label: string; bangla: string; bg: string; text: string; border: string }
+  { label: string; bg: string; text: string; border: string }
 > = {
   room: {
-    label: "Room",
-    bangla: "সিঙ্গেল রুম",
+    label: "Single Room",
     bg: "bg-secondary",
     text: "text-primary",
     border: "border-primary/20",
   },
   mess: {
     label: "Mess Seat",
-    bangla: "মেস সিট",
     bg: "bg-background",
     text: "text-foreground",
     border: "border-border",
   },
   flat: {
     label: "Full Flat",
-    bangla: "ফ্ল্যাট",
     bg: "bg-primary",
     text: "text-primary-foreground",
     border: "border-primary",
   },
   hostel: {
-    label: "Hostel",
-    bangla: "হোস্টেল সিট",
+    label: "Hostel Seat",
     bg: "bg-background",
     text: "text-accent",
     border: "border-accent/30",
@@ -72,19 +70,25 @@ export function PropertyCard({
     <article className="group bg-card border border-border rounded-xs overflow-hidden hover:border-primary/50 transition-all duration-200 flex flex-col h-full shadow-2xs hover:shadow-xs">
       {/* Property Image Container with crisp 16:10 ratio */}
       <div className="relative aspect-16/10 w-full overflow-hidden bg-border/40">
-        <Image
-          src={
-            imageError || !property.featuredImage
-              ? PROPERTY_IMAGE_FALLBACK
-              : property.featuredImage
-          }
-          alt={property.title}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-101"
-          onError={() => setImageError(true)}
-          priority={false}
-        />
+        <Link
+          href={`/properties/${property.id}`}
+          className="absolute inset-0 block cursor-pointer"
+          aria-label={property.title}
+        >
+          <Image
+            src={
+              imageError || !property.featuredImage
+                ? PROPERTY_IMAGE_FALLBACK
+                : property.featuredImage
+            }
+            alt={property.title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-101"
+            onError={() => setImageError(true)}
+            priority={false}
+          />
+        </Link>
 
         {/* Top Badges */}
         <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 pointer-events-none">
@@ -93,19 +97,19 @@ export function PropertyCard({
             <span
               className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold tracking-wide uppercase border shadow-xs ${typeBadge.bg} ${typeBadge.text} ${typeBadge.border}`}
             >
-              {typeBadge.label} ({typeBadge.bangla})
+              {typeBadge.label}
             </span>
 
             {/* Verified Badge */}
             {property.isVerified && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xs text-[11px] font-semibold bg-card text-primary border border-primary/25 shadow-xs">
                 <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-                <span className="hidden sm:inline">যাচাইকৃত</span>
+                <span className="hidden sm:inline">Verified</span>
               </span>
             )}
           </div>
 
-          {/* Favorite Action Button - Non-bubbly square with subtle 2px radius */}
+          {/* Favorite Action Button */}
           <button
             type="button"
             onClick={(e) => {
@@ -150,9 +154,11 @@ export function PropertyCard({
           </div>
 
           {/* Title */}
-          <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
-            {property.title}
-          </h3>
+          <Link href={`/properties/${property.id}`} className="block group/title">
+            <h3 className="text-base font-semibold text-foreground group-hover/title:text-primary transition-colors line-clamp-2 leading-snug">
+              {property.title}
+            </h3>
+          </Link>
 
           {/* Specifications Row */}
           <div className="pt-0.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
@@ -160,7 +166,10 @@ export function PropertyCard({
               property.seatsAvailable ? (
                 <span className="inline-flex items-center gap-1 font-medium text-foreground">
                   <Users className="w-3.5 h-3.5" />
-                  <span>{property.seatsAvailable} সিট খালি আছে</span>
+                  <span>
+                    {property.seatsAvailable}{" "}
+                    {property.seatsAvailable === 1 ? "seat available" : "seats available"}
+                  </span>
                 </span>
               ) : null
             ) : property.bedrooms ? (
@@ -190,14 +199,14 @@ export function PropertyCard({
             {property.facilities.slice(0, 3).map((facility) => {
               const labelMap: Record<string, string> = {
                 wifi: "Wi-Fi",
-                attached_bath: "অ্যাটাচড বাথ",
-                furnished: "ফার্নিশড",
-                balcony: "বারান্দা",
-                family_friendly: "ফ্যামিলি",
-                generator: "জেনারেটর/IPS",
-                lift: "লিফট",
-                cctv: "সিসিটিভি",
-                kitchen: "রান্নাঘর/খালা",
+                attached_bath: "Attached Bath",
+                furnished: "Furnished",
+                balcony: "Balcony",
+                family_friendly: "Family Friendly",
+                generator: "Generator/IPS",
+                lift: "Elevator",
+                cctv: "CCTV",
+                kitchen: "Kitchen",
               };
               return (
                 <span
@@ -210,7 +219,7 @@ export function PropertyCard({
             })}
             {property.facilities.length > 3 && (
               <span className="px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                +{property.facilities.length - 3} আরও
+                +{property.facilities.length - 3} more
               </span>
             )}
           </div>
@@ -223,24 +232,36 @@ export function PropertyCard({
               <span className="text-xl font-bold text-primary tracking-tight">
                 ৳ {formattedRent}
               </span>
-              <span className="text-xs text-muted-foreground">/ মাস</span>
+              <span className="text-xs text-muted-foreground">/ mo</span>
             </div>
             {property.serviceCharge ? (
               <p className="text-[10px] text-muted-foreground">
-                +৳{property.serviceCharge} সার্ভিস চার্জ
+                +৳{property.serviceCharge} service charge
               </p>
             ) : (
-              <p className="text-[10px] text-muted-foreground">সার্ভিস চার্জ অন্তর্ভুক্ত</p>
+              <p className="text-[10px] text-muted-foreground">Service charge included</p>
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => onViewDetails(property)}
-            className="inline-flex items-center justify-center px-3.5 py-2 text-xs font-semibold text-primary bg-secondary hover:bg-primary hover:text-primary-foreground rounded-xs border border-primary/20 transition-colors cursor-pointer"
-          >
-            বিস্তারিত দেখুন
-          </button>
+          <div className="flex items-center gap-1.5">
+            {onViewDetails && (
+              <button
+                type="button"
+                onClick={() => onViewDetails(property)}
+                title="Quick preview modal"
+                aria-label="Quick preview modal"
+                className="inline-flex items-center justify-center p-2 text-xs font-medium text-foreground bg-background hover:bg-secondary/40 rounded-xs border border-border transition-colors cursor-pointer"
+              >
+                <Eye className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
+            <Link
+              href={`/properties/${property.id}`}
+              className="inline-flex items-center justify-center px-3.5 py-2 text-xs font-semibold text-primary bg-secondary hover:bg-primary hover:text-primary-foreground rounded-xs border border-primary/20 transition-colors cursor-pointer"
+            >
+              View Details
+            </Link>
+          </div>
         </div>
       </div>
     </article>

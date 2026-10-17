@@ -24,11 +24,11 @@ interface PropertyGridProps {
   activeLocation?: string;
 }
 
-const SORT_OPTIONS: { value: PropertySortOption; label: string; bangla: string }[] = [
-  { value: "recommended", label: "Recommended", bangla: "প্রস্তাবিত" },
-  { value: "price_asc", label: "Rent: Low to High", bangla: "কম ভাড়া আগে" },
-  { value: "price_desc", label: "Rent: High to Low", bangla: "বেশি ভাড়া আগে" },
-  { value: "newest", label: "Newest Listings", bangla: "নতুন যুক্ত হওয়া" },
+const SORT_OPTIONS: { value: PropertySortOption; label: string }[] = [
+  { value: "recommended", label: "Recommended" },
+  { value: "price_asc", label: "Rent: Low to High" },
+  { value: "price_desc", label: "Rent: High to Low" },
+  { value: "newest", label: "Newest Listings" },
 ];
 
 export function PropertyGrid({
@@ -88,27 +88,27 @@ export function PropertyGrid({
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {totalCount === 0 ? (
-                "কোন বাসা বা মেস খুঁজে পাওয়া যায়নি"
+                "No properties found matching your criteria"
               ) : (
                 <>
-                  মোট{" "}
+                  Showing{" "}
                   <span className="font-semibold text-foreground">
                     {totalCount}
                   </span>{" "}
-                  টি লিস্টিং পাওয়া গেছে
-                  {activeLocation ? ` (“${activeLocation}” এলাকায়)` : ""}
+                  {totalCount === 1 ? "available listing" : "available listings"}
+                  {activeLocation ? ` in “${activeLocation}”` : ""}
                 </>
               )}
             </p>
           </div>
 
-          {/* Custom Radix Sort Dropdown (NO NATIVE SELECT) */}
+          {/* Custom Radix Sort Dropdown */}
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1 shrink-0">
               <ArrowUpDown className="w-3.5 h-3.5" />
-              <span>বাছাই (Sort):</span>
+              <span>Sort:</span>
             </span>
-            <div className="w-full sm:w-auto min-w-[200px] sm:min-w-[245px] flex-1 sm:flex-initial">
+            <div className="w-full sm:w-auto min-w-[180px] sm:min-w-[210px] flex-1 sm:flex-initial">
               <Select
                 value={sortOption}
                 onValueChange={(val) => onSortChange(val as PropertySortOption)}
@@ -123,9 +123,6 @@ export function PropertyGrid({
                   {SORT_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       <span className="font-medium">{opt.label}</span>
-                      <span className="text-[11px] text-muted-foreground ml-1.5 whitespace-nowrap">
-                        ({opt.bangla})
-                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

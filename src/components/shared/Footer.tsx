@@ -22,6 +22,9 @@ export function Footer({ onLocationSelect }: FooterProps) {
     e: React.MouseEvent<HTMLAnchorElement>,
     loc: string
   ) => {
+    if (typeof window !== "undefined" && window.location.pathname !== "/" && window.location.pathname !== "") {
+      return;
+    }
     e.preventDefault();
     if (onLocationSelect) {
       onLocationSelect(loc);
@@ -54,13 +57,13 @@ export function Footer({ onLocationSelect }: FooterProps) {
               </div>
               <div className="space-y-0.5">
                 <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                  <span>ভাড়াটিয়াদের জন্য জরুরি নিরাপত্তা বার্তা</span>
+                  <span>Important Safety Advisory for Renters</span>
                   <span className="text-[11px] font-semibold text-destructive bg-background px-2 py-0.5 rounded-xs border border-destructive/30">
-                    সতর্কতা
+                    Caution
                   </span>
                 </h4>
                 <p className="text-xs text-muted-foreground leading-relaxed max-w-3xl">
-                  সরাসরি বাসা, মেস বা হোস্টেলে গিয়ে রুম ও পরিবেশ না দেখে এবং বাড়িওয়ালা/ম্যানেজারের সাথে মুখোমুখি কথা না বলে কখনোই বিকাশ, নগদ বা ব্যাংকে কোনো অগ্রিম বুকিং মানি পাঠাবেন না।
+                  Never send advance booking money or security deposits via bKash, Nagad, or bank transfer without visiting the property in person and meeting the landlord or manager directly.
                 </p>
               </div>
             </div>
@@ -68,7 +71,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
             <div className="flex items-center gap-2 shrink-0">
               <span className="text-xs font-semibold text-primary flex items-center gap-1">
                 <CheckCircle2 className="w-4 h-4 text-primary" />
-                যাচাইকৃত লিস্টিং বেছে নিন
+                Choose Verified Listings
               </span>
             </div>
           </div>
@@ -91,29 +94,29 @@ export function Footer({ onLocationSelect }: FooterProps) {
             </Link>
 
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-md">
-              স্মার্টরেন্ট বিডি — ঢাকা, বগুড়া এবং বাংলাদেশের সকল বিভাগীয় ও জেলা শহরের বিশ্ববিদ্যালয় শিক্ষার্থী, চাকরিজীবী ও ব্যাচেলরদের জন্য সাশ্রয়ী বাসা ও মেস খোঁজার উন্মুক্ত ডিজিটাল মাধ্যম।
+              SmartRent BD is an open rental discovery platform dedicated to university students, bachelor tenants, and families seeking affordable, verified housing across Dhaka and Bogura.
             </p>
 
             <div className="pt-2 space-y-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-accent shrink-0" />
-                <span>প্রধান সেবা এলাকা: ঢাকা ও বগুড়া শহর</span>
+                <span>Primary Hubs: Dhaka & Bogura, Bangladesh</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary shrink-0" />
-                <span>হেল্পডেস্ক: support@smartrentbd.com</span>
+                <span>Helpdesk: support@smartrentbd.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <PhoneCall className="w-4 h-4 text-primary shrink-0" />
-                <span>সাপোর্ট সময়: প্রতিদিন সকাল ৯টা থেকে রাত ১০টা</span>
+                <span>Support Hours: Daily 9:00 AM – 10:00 PM</span>
               </div>
             </div>
           </div>
 
-          {/* Column 2: বগুড়া আবাসন হাব (Bogura Student & Family Hubs) */}
+          {/* Column 2: Bogura Locations */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-foreground uppercase tracking-wider border-b border-border pb-2">
-              বগুড়া আবাসন (Bogura)
+              Bogura Locations
             </h4>
             <ul className="space-y-2 text-xs text-muted-foreground">
               <li>
@@ -122,7 +125,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   onClick={(e) => handleLocationClick(e, "Satmatha")}
                   className="hover:text-primary transition-colors"
                 >
-                  সাতমাথা ও কলেজ রোড
+                  Satmatha & College Road
                 </a>
               </li>
               <li>
@@ -131,7 +134,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   onClick={(e) => handleLocationClick(e, "Azizul Haque")}
                   className="hover:text-primary transition-colors"
                 >
-                  সরকারি আযীযুল হক কলেজ এলাকা
+                  Govt. Azizul Haque College Area
                 </a>
               </li>
               <li>
@@ -140,7 +143,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   onClick={(e) => handleLocationClick(e, "Joleshwaritola")}
                   className="hover:text-primary transition-colors"
                 >
-                  জলেশ্বরীতলা আবাসিক এলাকা
+                  Joleshwaritola Residential Area
                 </a>
               </li>
               <li>
@@ -149,7 +152,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   onClick={(e) => handleLocationClick(e, "Colony")}
                   className="hover:text-primary transition-colors"
                 >
-                  কলোনী ও শেরপুর রোড (মেডিকেল সংলগ্ন)
+                  Colony & Sherpur Road (Near Medical)
                 </a>
               </li>
               <li>
@@ -158,16 +161,16 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   onClick={(e) => handleLocationClick(e, "Bogura")}
                   className="font-medium text-primary hover:underline"
                 >
-                  বগুড়ার সকল মেস ও বাসা →
+                  All Bogura Properties →
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Column 3: ঢাকা আবাসন হাব (Dhaka Student Hubs) */}
+          {/* Column 3: Dhaka Locations */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-foreground uppercase tracking-wider border-b border-border pb-2">
-              ঢাকা আবাসন (Dhaka)
+              Dhaka Locations
             </h4>
             <ul className="space-y-2 text-xs text-muted-foreground">
               <li>
@@ -176,7 +179,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   onClick={(e) => handleLocationClick(e, "Banasree")}
                   className="hover:text-primary transition-colors"
                 >
-                  বনশ্রী ও রামপুরা (EWU এলাকা)
+                  Banasree & Rampura (EWU Area)
                 </a>
               </li>
               <li>
@@ -185,7 +188,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   onClick={(e) => handleLocationClick(e, "Mirpur")}
                   className="hover:text-primary transition-colors"
                 >
-                  মিরপুর-১০ ও মিরপুর ডিওএইচএস
+                  Mirpur-10 & Mirpur DOHS
                 </a>
               </li>
               <li>
@@ -194,7 +197,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   onClick={(e) => handleLocationClick(e, "Mohammadpur")}
                   className="hover:text-primary transition-colors"
                 >
-                  মোহাম্মদপুর ও রিং রোড
+                  Mohammadpur & Ring Road
                 </a>
               </li>
               <li>
@@ -203,7 +206,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   onClick={(e) => handleLocationClick(e, "Farmgate")}
                   className="hover:text-primary transition-colors"
                 >
-                  ফার্মগেট ও ইন্দিরা রোড
+                  Farmgate & Indira Road
                 </a>
               </li>
               <li>
@@ -212,7 +215,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   onClick={(e) => handleLocationClick(e, "Bashundhara")}
                   className="hover:text-primary transition-colors"
                 >
-                  বসুন্ধরা আ/এ (NSU, IUB এলাকা)
+                  Bashundhara R/A (NSU, IUB Area)
                 </a>
               </li>
               <li>
@@ -221,7 +224,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   onClick={(e) => handleLocationClick(e, "Uttara")}
                   className="hover:text-primary transition-colors"
                 >
-                  উত্তরা (সেক্টর ৭ ও ১১)
+                  Uttara (Sectors 7 & 11)
                 </a>
               </li>
             </ul>
@@ -230,7 +233,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
           {/* Column 4: Quick Navigation & Services */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-foreground uppercase tracking-wider border-b border-border pb-2">
-              সেবাসমূহ ও তথ্য
+              Platform & Services
             </h4>
             <ul className="space-y-2 text-xs text-muted-foreground">
               <li>
@@ -238,7 +241,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   href="#explore"
                   className="hover:text-primary transition-colors"
                 >
-                  বাসা ও মেস খুঁজুন
+                  Find Accommodation
                 </a>
               </li>
               <li>
@@ -246,7 +249,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   href="#roommates"
                   className="hover:text-primary transition-colors"
                 >
-                  রুমমেট খুঁজুন (Beta)
+                  Find Roommates (Beta)
                 </a>
               </li>
               <li>
@@ -254,7 +257,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   href="#how-it-works"
                   className="hover:text-primary transition-colors"
                 >
-                  কিভাবে কাজ করে
+                  How It Works
                 </a>
               </li>
               <li>
@@ -262,7 +265,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   href="/login"
                   className="hover:text-primary transition-colors"
                 >
-                  অ্যাকাউন্ট লগইন
+                  Sign In
                 </Link>
               </li>
               <li>
@@ -270,7 +273,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   href="/register"
                   className="hover:text-primary transition-colors"
                 >
-                  নতুন অ্যাকাউন্ট খুলুন
+                  Create Free Account
                 </Link>
               </li>
               <li>
@@ -278,7 +281,7 @@ export function Footer({ onLocationSelect }: FooterProps) {
                   href="/dashboard/admin"
                   className="text-muted-foreground/60 hover:text-primary transition-colors"
                 >
-                  অ্যাডমিন পোর্টাল
+                  Admin Portal
                 </Link>
               </li>
             </ul>
@@ -288,10 +291,10 @@ export function Footer({ onLocationSelect }: FooterProps) {
         {/* 3. Bottom Legal & Copyright Bar */}
         <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-4">
-            <p>© {currentYear} SmartRent BD. সর্বস্বত্ব সংরক্ষিত।</p>
+            <p>© {currentYear} SmartRent BD. All rights reserved.</p>
             <span className="hidden sm:inline text-border">|</span>
             <span className="text-[11px] text-muted-foreground/80">
-              বগুড়া ও ঢাকার শিক্ষার্থীদের জন্য তৈরি মেস ও ভাড়া আবাসন নেটওয়ার্ক
+              Student rental & bachelor housing network for Dhaka and Bogura
             </span>
           </div>
 

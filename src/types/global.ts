@@ -51,6 +51,9 @@ export const enum IDayOfWeek {
 
 export const enum IRole {
   SUPER_ADMIN = "SUPER_ADMIN",
+  ADMIN = "ADMIN",
+  STUDENT = "STUDENT",
+  OWNER = "OWNER",
 }
 
 export const enum IGender {

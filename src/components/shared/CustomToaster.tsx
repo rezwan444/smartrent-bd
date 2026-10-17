@@ -7,26 +7,27 @@ export function CustomToaster() {
   return (
     <Toaster
       position="bottom-right"
+      theme="light"
       closeButton
       icons={{
-        success: <CheckCircle className="w-5 h-5 text-[#00c97b]" />,
-        error: <AlertCircle className="w-5 h-5 text-[#ef4444]" />,
-        info: <Info className="w-5 h-5 text-[#3b82f6]" />,
-        warning: <AlertTriangle className="w-5 h-5 text-[#f59e0b]" />,
+        success: <CheckCircle className="w-4.5 h-4.5 text-primary shrink-0" />,
+        error: <AlertCircle className="w-4.5 h-4.5 text-destructive shrink-0" />,
+        info: <Info className="w-4.5 h-4.5 text-primary shrink-0" />,
+        warning: <AlertTriangle className="w-4.5 h-4.5 text-accent shrink-0" />,
       }}
       toastOptions={{
         classNames: {
           toast:
-            "!relative !flex !items-start sm:!items-center !gap-3 !w-full !rounded-2xl !py-4 !pl-5 !pr-12 !shadow-lg !border",
-          title: "!text-[15px] !font-medium !text-foreground !leading-snug",
-          description: "!text-[14px] !text-muted-foreground !leading-snug",
-          success: "!bg-[#18181b] !border-[#00c97b]/50",
-          error: "!bg-[#18181b] !border-[#ef4444]/50",
-          info: "!bg-[#18181b] !border-[#3b82f6]/50",
-          warning: "!bg-[#18181b] !border-[#f59e0b]/50",
+            "!relative !flex !items-center !gap-3 !w-full !rounded-xs !py-3 !pl-4 !pr-10 !shadow-md !border !bg-card !text-foreground font-sans",
+          title: "!text-xs sm:!text-sm !font-semibold !text-foreground !leading-snug",
+          description: "!text-[12px] !text-muted-foreground !leading-snug",
+          success: "!bg-card !border-primary/40 !text-foreground",
+          error: "!bg-card !border-destructive/40 !text-foreground",
+          info: "!bg-card !border-primary/40 !text-foreground",
+          warning: "!bg-card !border-accent/40 !text-foreground",
           closeButton:
-            "!bg-transparent !border-none !text-muted-foreground hover:!text-foreground !absolute !right-4 !top-0 !bottom-0 !my-auto !left-auto !transform-none !p-1 !h-6 !w-6 !flex !items-center !justify-center !opacity-100",
-          icon: "!mt-0.5 sm:!mt-0 !shrink-0 !w-5 !h-5",
+            "!bg-transparent hover:!bg-secondary/60 !border-none !text-muted-foreground hover:!text-foreground !absolute !right-3 !top-0 !bottom-0 !my-auto !left-auto !transform-none !p-1 !h-6 !w-6 !flex !items-center !justify-center !opacity-100 !rounded-xs transition-colors",
+          icon: "!shrink-0 !w-4.5 !h-4.5",
         },
       }}
     />

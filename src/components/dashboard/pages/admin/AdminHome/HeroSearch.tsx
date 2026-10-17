@@ -36,24 +36,24 @@ interface HeroSearchProps {
   }) => void;
 }
 
-const PROPERTY_TYPES: { value: PropertyType | "all"; label: string; bangla: string }[] = [
-  { value: "all", label: "All Types", bangla: "সকল প্রকার" },
-  { value: "room", label: "Single / Sublet Room", bangla: "রুম / সাবলেট" },
-  { value: "mess", label: "Student / Bachelor Mess", bangla: "মেস সিট" },
-  { value: "flat", label: "Residential Flat", bangla: "সম্পূর্ণ ফ্ল্যাট" },
-  { value: "hostel", label: "Student Hostel", bangla: "হোস্টেল সিট" },
+const PROPERTY_TYPES: { value: PropertyType | "all"; label: string }[] = [
+  { value: "all", label: "All Property Types" },
+  { value: "room", label: "Single / Sublet Room" },
+  { value: "mess", label: "Student / Bachelor Mess" },
+  { value: "flat", label: "Residential Flat" },
+  { value: "hostel", label: "Student Hostel Seat" },
 ];
 
 const BUDGET_PRESETS = [
-  { label: "যেকোনো বাজেট (Any Budget)", min: null, max: null },
-  { label: "৳ ৫,০০০ এর নিচে (Below ৳5k)", min: null, max: 5000 },
-  { label: "৳ ৫,০০০ – ৳ ১০,০০০", min: 5000, max: 10000 },
-  { label: "৳ ১০,০০০ – ৳ ২০,০০০", min: 10000, max: 20000 },
-  { label: "৳ ২০,০০০ এর উপরে (৳20k+)", min: 20000, max: null },
+  { label: "Any Budget", min: null, max: null },
+  { label: "Below ৳5,000", min: null, max: 5000 },
+  { label: "৳ 5,000 – ৳ 10,000", min: 5000, max: 10000 },
+  { label: "৳ 10,000 – ৳ 20,000", min: 10000, max: 20000 },
+  { label: "Above ৳20,000", min: 20000, max: null },
 ];
 
 const POPULAR_LOCATIONS = [
-  { label: "Bogura (সাতমাথা/কলেজ)", value: "Bogura" },
+  { label: "Bogura (Satmatha/College)", value: "Bogura" },
   { label: "Joleshwaritola, Bogura", value: "Joleshwaritola" },
   { label: "Banasree, Dhaka", value: "Banasree" },
   { label: "Mirpur, Dhaka", value: "Mirpur" },
@@ -144,7 +144,7 @@ export function HeroSearch({
 
   // Get human-readable budget trigger label
   const getBudgetLabel = () => {
-    if (!minBudget && !maxBudget) return "যেকোনো বাজেট (Any)";
+    if (!minBudget && !maxBudget) return "Any Budget";
     if (minBudget && maxBudget) {
       return `৳ ${minBudget.toLocaleString()} – ৳ ${maxBudget.toLocaleString()}`;
     }
@@ -152,9 +152,9 @@ export function HeroSearch({
       return `৳ ${minBudget.toLocaleString()}+`;
     }
     if (!minBudget && maxBudget) {
-      return `সর্বোচ্চ ৳ ${maxBudget.toLocaleString()}`;
+      return `Up to ৳ ${maxBudget.toLocaleString()}`;
     }
-    return "যেকোনো বাজেট";
+    return "Any Budget";
   };
 
   return (
@@ -164,7 +164,7 @@ export function HeroSearch({
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-xs bg-secondary border border-primary/15 text-primary text-xs font-semibold uppercase tracking-wider mb-3">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>বাংলাদেশি শিক্ষার্থী ও মেস আবাসন পোর্টাল</span>
+            <span>Student & Bachelor Rental Platform in Bangladesh</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-bold tracking-tight text-foreground leading-tight font-heading">
@@ -172,7 +172,7 @@ export function HeroSearch({
           </h1>
 
           <p className="mt-2.5 text-base sm:text-lg text-muted-foreground leading-relaxed">
-            ঢাকা, বগুড়া ও বিভাগীয় শহরের শিক্ষার্থী ও চাকরিজীবীদের জন্য রুম, মেস সিট, হোস্টেল এবং বাসা খোঁজার নির্ভরযোগ্য ঠিকানা।
+            Discover verified student rooms, bachelor mess seats, hostels, and residential flats across Dhaka and Bogura.
           </p>
         </div>
 
@@ -186,7 +186,7 @@ export function HeroSearch({
                   htmlFor="search-location"
                   className="h-5 flex items-center text-xs font-semibold text-foreground uppercase tracking-wider mb-1.5"
                 >
-                  এলাকা বা শহর (Area / City)
+                  Location or Area
                 </label>
                 <div className="relative h-11">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -195,7 +195,7 @@ export function HeroSearch({
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    placeholder="যেমন: বগুড়া, সাতমাথা, বনশ্রী, Mirpur..."
+                    placeholder="e.g. Bogura, Satmatha, Banasree, Mirpur..."
                     className="w-full h-11 box-border pl-9 pr-3 text-sm text-foreground bg-background border border-border rounded-xs focus:outline-hidden focus:ring-2 focus:ring-ring transition-colors placeholder:text-muted-foreground/60"
                   />
                 </div>
@@ -207,7 +207,7 @@ export function HeroSearch({
                   htmlFor="property-type-selector"
                   className="h-5 flex items-center text-xs font-semibold text-foreground uppercase tracking-wider mb-1.5"
                 >
-                  আবাসন ধরণ (Property Type)
+                  Property Type
                 </label>
                 <div className="h-11">
                   <Select
@@ -223,10 +223,7 @@ export function HeroSearch({
                     <SelectContent className="bg-popover border border-border rounded-xs shadow-lg">
                       {PROPERTY_TYPES.map((pt) => (
                         <SelectItem key={pt.value} value={pt.value}>
-                          <div className="flex items-baseline justify-between w-full gap-3">
-                            <span className="font-medium">{pt.label}</span>
-                            <span className="text-xs text-muted-foreground">({pt.bangla})</span>
-                          </div>
+                          <span className="font-medium">{pt.label}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -237,7 +234,7 @@ export function HeroSearch({
               {/* 3. Unified Budget Selector (Radix Popover) */}
               <div className="md:col-span-3 flex flex-col justify-end">
                 <label className="h-5 flex items-center text-xs font-semibold text-foreground uppercase tracking-wider mb-1.5">
-                  মাসিক বাজেট (Monthly Rent)
+                  Monthly Budget
                 </label>
                 <div className="h-11">
                   <Popover open={isBudgetOpen} onOpenChange={setIsBudgetOpen}>
@@ -263,7 +260,7 @@ export function HeroSearch({
                     >
                       <div>
                         <h4 className="text-xs font-bold uppercase tracking-wider text-foreground mb-2">
-                          বাজেট পছন্দ করুন (Select Range)
+                          Select Range
                         </h4>
                         <div className="space-y-1">
                           {BUDGET_PRESETS.map((preset, idx) => {
@@ -290,7 +287,7 @@ export function HeroSearch({
 
                       <div className="pt-3 border-t border-border space-y-2.5">
                         <p className="text-[11px] font-semibold uppercase text-muted-foreground">
-                          কাস্টম বাজেট দিন (Custom BDT):
+                          Custom Range (BDT):
                         </p>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
@@ -300,7 +297,7 @@ export function HeroSearch({
                               step="500"
                               value={customMin}
                               onChange={(e) => setCustomMin(e.target.value)}
-                              placeholder="Min (যেমন ৩০০০)"
+                              placeholder="Min (e.g. 3,000)"
                               className="w-full h-9 px-2.5 text-xs bg-background border border-border rounded-xs focus:ring-1 focus:ring-ring outline-hidden"
                             />
                           </div>
@@ -311,7 +308,7 @@ export function HeroSearch({
                               step="500"
                               value={customMax}
                               onChange={(e) => setCustomMax(e.target.value)}
-                              placeholder="Max (যেমন ১০০০০)"
+                              placeholder="Max (e.g. 10,000)"
                               className="w-full h-9 px-2.5 text-xs bg-background border border-border rounded-xs focus:ring-1 focus:ring-ring outline-hidden"
                             />
                           </div>
@@ -323,14 +320,14 @@ export function HeroSearch({
                             onClick={handleResetBudget}
                             className="text-xs text-destructive hover:underline cursor-pointer"
                           >
-                            রিসেট
+                            Reset
                           </button>
                           <button
                             type="button"
                             onClick={handleApplyCustomBudget}
                             className="px-3.5 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded-xs hover:bg-primary-dark cursor-pointer transition-colors"
                           >
-                            প্রয়োগ করুন
+                            Apply
                           </button>
                         </div>
                       </div>
@@ -350,7 +347,7 @@ export function HeroSearch({
                     className="w-full h-11 box-border inline-flex items-center justify-center gap-2 px-4 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shadow-2xs cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <Search className="w-4 h-4 shrink-0" />
-                    <span className="truncate">অনুসন্ধান করুন</span>
+                    <span className="truncate">Search</span>
                   </button>
                 </div>
               </div>
@@ -360,7 +357,7 @@ export function HeroSearch({
           {/* Location Tags */}
           <div className="mt-4 pt-3.5 border-t border-border flex flex-wrap items-center gap-1.5 sm:gap-2">
             <span className="text-xs font-medium text-muted-foreground mr-1">
-              জনপ্রিয় এলাকা:
+              Popular Areas:
             </span>
             {POPULAR_LOCATIONS.map((loc) => {
               const isActive =

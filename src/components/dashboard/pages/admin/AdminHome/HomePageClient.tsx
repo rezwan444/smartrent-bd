@@ -1,7 +1,5 @@
 "use client";
 
-import { Footer } from "@/components/shared/Footer";
-import { Navbar } from "@/components/shared/Navbar";
 import { MOCK_PROPERTIES } from "@/data/mockProperties";
 import { filterProperties, sortProperties } from "@/lib/propertyFilters";
 import {
@@ -10,7 +8,7 @@ import {
   PropertySortOption,
   PropertyType,
 } from "@/types/property";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HeroSearch } from "./HeroSearch";
 import { HowItWorks } from "./HowItWorks";
 import { PropertyGrid } from "./PropertyGrid";
@@ -18,6 +16,20 @@ import { QuickFilters } from "./QuickFilters";
 import { RoommateTeaser } from "./RoommateTeaser";
 
 export function HomePageClient() {
+  // Smooth scroll to target hash section if navigated from another page
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash) {
+      const targetId = window.location.hash.replace("#", "");
+      const timer = setTimeout(() => {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   // Search state
   const [location, setLocation] = useState<string>("");
   const [propertyType, setPropertyType] = useState<PropertyType | "all">("all");
@@ -111,58 +123,45 @@ export function HomePageClient() {
     sortOption,
   ]);
 
-  const scrollToExplore = () => {
-    const el = document.getElementById("explore");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
-      {/* Section A: Site Navigation */}
-      <Navbar onFindPlaceClick={scrollToExplore} />
+    <div className="w-full">
+      {/* Section B: Hero & Search Form */}
+      <HeroSearch
+        initialLocation={location}
+        initialType={propertyType}
+        initialMinRent={minBudget}
+        initialMaxRent={maxBudget}
+        onSearch={handleHeroSearch}
+      />
 
-      <main className="flex-1">
-        {/* Section B: Hero & Search Form */}
-        <HeroSearch
-          initialLocation={location}
-          initialType={propertyType}
-          initialMinRent={minBudget}
-          initialMaxRent={maxBudget}
-          onSearch={handleHeroSearch}
-        />
+      {/* Section C: Quick Facility & Attribute Filters */}
+      <QuickFilters
+        selectedFacilities={selectedFacilities}
+        onToggleFacility={handleToggleFacility}
+        onlyVerified={onlyVerified}
+        onToggleVerified={handleToggleVerified}
+        genderPreference={genderPreference}
+        onChangeGenderPreference={setGenderPreference}
+        onClearAll={handleClearAll}
+        activeFilterCount={activeFilterCount}
+      />
 
-        {/* Section C: Quick Facility & Attribute Filters */}
-        <QuickFilters
-          selectedFacilities={selectedFacilities}
-          onToggleFacility={handleToggleFacility}
-          onlyVerified={onlyVerified}
-          onToggleVerified={handleToggleVerified}
-          genderPreference={genderPreference}
-          onChangeGenderPreference={setGenderPreference}
-          onClearAll={handleClearAll}
-          activeFilterCount={activeFilterCount}
-        />
+      {/* Section D & E: Places Worth Exploring Results Grid & Cards */}
+      <PropertyGrid
+        properties={filteredProperties}
+        totalCount={filteredProperties.length}
+        sortOption={sortOption}
+        onSortChange={setSortOption}
+        onClearFilters={handleClearAll}
+        hasActiveFilters={activeFilterCount > 0}
+        activeLocation={location}
+      />
 
-        {/* Section D & E: Places Worth Exploring Results Grid & Cards */}
-        <PropertyGrid
-          properties={filteredProperties}
-          totalCount={filteredProperties.length}
-          sortOption={sortOption}
-          onSortChange={setSortOption}
-          onClearFilters={handleClearAll}
-          hasActiveFilters={activeFilterCount > 0}
-          activeLocation={location}
-        />
+      {/* Supporting Section: Roommate Matching Teaser */}
+      <RoommateTeaser />
 
-        {/* Supporting Section: Roommate Matching Teaser */}
-        <RoommateTeaser />
-
-        {/* Supporting Section: How It Works */}
-        <HowItWorks />
-      </main>
-
-      {/* Section G: Footer */}
-      <Footer onLocationSelect={(loc) => setLocation(loc)} />
+      {/* Supporting Section: How It Works */}
+      <HowItWorks />
     </div>
   );
 }

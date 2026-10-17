@@ -1,6 +1,15 @@
 import { redirect } from "next/navigation";
-const page = () => {
-  redirect("/dashboard/admin");
-};
+import { cookies } from "next/headers";
 
-export default page;
+export default async function DashboardPage() {
+  const cookieStore = await cookies();
+  const userRole = cookieStore.get("userRole")?.value;
+
+  if (userRole === "STUDENT") {
+    redirect("/dashboard/student");
+  } else if (userRole === "OWNER") {
+    redirect("/dashboard/owner");
+  } else {
+    redirect("/dashboard/admin");
+  }
+}
