@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { AppSelect, AppSelectOption } from "@/components/shared/AppSelect";
 import { IProperty } from "@/types/property";
-import { AlertTriangle, CheckCircle2, Flag } from "lucide-react";
+import { CheckCircle2, Flag, EyeOff, ShieldAlert } from "lucide-react";
+import { submitScamReport } from "@/lib/propertyModerationStorage";
+import { toast } from "sonner";
 
 interface ReportListingModalProps {
   property: IProperty;
@@ -46,29 +48,19 @@ export function ReportListingModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const reportId = `SR-REP-${Date.now().toString().slice(-6)}`;
-    const reportData = {
-      id: reportId,
+    // Call unified property moderation store (Track C3 Rule 8: Immediately hides listing from search)
+    const report = submitScamReport({
       propertyId: property.id,
       propertyTitle: property.title,
+      propertyLocation: `${property.location.neighborhood}, ${property.location.city}`,
       reason: selectedReason,
       details,
       contactInfo,
-      reportedAt: new Date().toISOString(),
-    };
+      reportedBy: "Student Tenant",
+    });
 
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("smartrent_listing_reports");
-        const list = stored ? JSON.parse(stored) : [];
-        list.push(reportData);
-        localStorage.setItem("smartrent_listing_reports", JSON.stringify(list));
-      } catch {
-        // ignore
-      }
-    }
-
-    setSubmittedReportId(reportId);
+    setSubmittedReportId(report.id);
+    toast.warning("Report logged. Listing has been hidden from search results while under review.");
   };
 
   const handleResetAndClose = () => {
@@ -102,18 +94,29 @@ export function ReportListingModal({
                   <span>Report Logged for Administrative Review</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Thank you for keeping SmartRent BD safe for students and tenants. Your report has been recorded locally with reference ID:{" "}
+                  Thank you for keeping SmartRent BD safe for students. Your report has been recorded with reference ID:{" "}
                   <code className="text-xs font-mono font-semibold text-foreground px-1 py-0.5 bg-background rounded-xs border border-border">
                     {submittedReportId}
                   </code>.
                 </p>
               </div>
 
+              {/* Automatic Suppression Notice (Track C3 Rule 8) */}
+              <div className="p-3.5 rounded-xs bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs space-y-1">
+                <strong className="font-semibold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                  <EyeOff className="w-3.5 h-3.5" />
+                  <span>Listing Temporarily Hidden From Public Search</span>
+                </strong>
+                <p className="leading-relaxed text-[11px]">
+                  In accordance with Track C3 safety requirements, this listing has been automatically hidden from student search results while the safety desk investigates.
+                </p>
+              </div>
+
               <div className="rounded-xs border border-border bg-background p-3.5 text-xs text-muted-foreground space-y-1.5">
-                <p className="font-semibold text-foreground">Immediate Scam Alert Hotline:</p>
+                <p className="font-semibold text-foreground">Immediate Scam Alert Desk:</p>
                 <p className="leading-relaxed">
                   If someone solicited illegal fees or engaged in impersonation fraud, please email us directly at{" "}
-                  <strong className="text-foreground">support@smartrentbd.com</strong> or call our safety desk at{" "}
+                  <strong className="text-foreground">safety@smartrentbd.com</strong> or call our safety desk at{" "}
                   <strong className="text-foreground">+880 1700-000000</strong>.
                 </p>
               </div>
@@ -122,7 +125,7 @@ export function ReportListingModal({
                 <button
                   type="button"
                   onClick={handleResetAndClose}
-                  className="px-4 py-2.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors cursor-pointer"
                 >
                   Close
                 </button>
@@ -150,7 +153,7 @@ export function ReportListingModal({
                   rows={3}
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
-                  placeholder="Provide any additional context or proof..."
+                  placeholder="Provide any additional context or proof (e.g. asked for bKash token)..."
                   className="w-full p-2.5 text-xs rounded-xs border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                 />
               </div>
@@ -169,9 +172,9 @@ export function ReportListingModal({
               </div>
 
               <div className="rounded-xs border border-border bg-background p-3 flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <ShieldAlert className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-muted-foreground leading-snug">
-                  Reports are handled confidentially. We investigate suspicious listings and de-list landlords who violate safety policies.
+                  Reporting immediately flags the listing for admin inspection and temporarily removes it from public search results to protect other students.
                 </p>
               </div>
 
@@ -179,13 +182,13 @@ export function ReportListingModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full sm:w-auto px-4 py-2.5 text-xs font-medium text-foreground bg-background border border-border rounded-xs hover:bg-secondary/40 transition-colors cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-foreground bg-background border border-border rounded-xs hover:bg-secondary/40 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-white bg-destructive hover:bg-destructive/90 rounded-xs transition-colors shadow-2xs cursor-pointer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-destructive hover:bg-destructive/90 rounded-xs transition-colors shadow-2xs cursor-pointer"
                 >
                   <Flag className="w-3.5 h-3.5" />
                   <span>Submit Safety Report</span>

@@ -1,13 +1,14 @@
 "use client";
 
-import { MOCK_PROPERTIES } from "@/data/mockProperties";
 import { filterProperties, sortProperties } from "@/lib/propertyFilters";
 import {
   PropertyFacility,
   PropertyFilterCriteria,
   PropertySortOption,
   PropertyType,
+  IProperty,
 } from "@/types/property";
+import { getAllPublicProperties } from "@/lib/propertyModerationStorage";
 import { useEffect, useMemo, useState } from "react";
 import { HeroSearch } from "./HeroSearch";
 import { HowItWorks } from "./HowItWorks";
@@ -28,6 +29,21 @@ export function HomePageClient() {
       }, 100);
       return () => clearTimeout(timer);
     }
+  }, []);
+
+  // Public non-scam, approved listings state (Track C3 Rule 8: Hidden listings excluded)
+  const [publicListings, setPublicListings] = useState<IProperty[]>(() =>
+    getAllPublicProperties()
+  );
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setPublicListings(getAllPublicProperties());
+    };
+    window.addEventListener("smartrent_moderation_updated", handleUpdate);
+    return () => {
+      window.removeEventListener("smartrent_moderation_updated", handleUpdate);
+    };
   }, []);
 
   // Search state
@@ -110,9 +126,10 @@ export function HomePageClient() {
       onlyVerified,
     };
 
-    const filtered = filterProperties(MOCK_PROPERTIES, criteria);
+    const filtered = filterProperties(publicListings, criteria);
     return sortProperties(filtered, sortOption);
   }, [
+    publicListings,
     location,
     propertyType,
     minBudget,

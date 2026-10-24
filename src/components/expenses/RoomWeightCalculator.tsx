@@ -11,6 +11,7 @@ import {
   ArrowRightLeft,
   CheckCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface RoomWeightCalculatorProps {
   members: FlatMember[];
@@ -21,6 +22,7 @@ interface RoomWeightCalculatorProps {
 export function RoomWeightCalculator({
   members,
   initialRent = 24000,
+  onApplyWeightsToMembers,
 }: RoomWeightCalculatorProps) {
   const [rentInput, setRentInput] = useState<string>(String(initialRent));
   const [customSizes, setCustomSizes] = useState<Record<string, number>>(
@@ -55,6 +57,20 @@ export function RoomWeightCalculator({
     }));
   };
 
+  const handleApplyWeights = () => {
+    if (!onApplyWeightsToMembers) return;
+    const updated = members.map((m) => {
+      const match = comparison.find((c) => c.id === m.id);
+      return {
+        ...m,
+        roomSizeSqFt: customSizes[m.id] || m.roomSizeSqFt,
+        rentWeightPercent: match ? Math.round(match.weightPercent) : m.rentWeightPercent,
+      };
+    });
+    onApplyWeightsToMembers(updated);
+    toast.success("Updated room square footage & rent weights applied to household!");
+  };
+
   return (
     <div className="space-y-6">
       {/* Intro Header */}
@@ -66,32 +82,45 @@ export function RoomWeightCalculator({
             </div>
             <div>
               <h2 className="text-sm font-bold text-foreground font-heading">
-                Fair Rent Distribution by Room Size (Sq Ft)
+                Fair Rent Distribution by Room Size (Optional Tool)
               </h2>
               <p className="text-xs text-muted-foreground">
-                Eliminate flatmate tension by distributing base rent proportionally to individual room square footage.
+                Optional calculator to compute square footage ratios. Standard equal split remains the default.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Label htmlFor="flat-rent-input" className="text-xs font-semibold whitespace-nowrap">
-              Monthly Rent:
-            </Label>
-            <div className="relative w-36">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-bold">
-                ৳
-              </span>
-              <Input
-                id="flat-rent-input"
-                type="number"
-                min="1000"
-                step="500"
-                value={rentInput}
-                onChange={(e) => setRentInput(e.target.value)}
-                className="h-9 pl-7 text-xs font-bold font-mono"
-              />
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="flat-rent-input" className="text-xs font-semibold whitespace-nowrap">
+                Base Rent:
+              </Label>
+              <div className="relative w-32">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-bold">
+                  ৳
+                </span>
+                <Input
+                  id="flat-rent-input"
+                  type="number"
+                  min="1000"
+                  step="500"
+                  value={rentInput}
+                  onChange={(e) => setRentInput(e.target.value)}
+                  className="h-8 pl-6 text-xs font-bold font-mono"
+                />
+              </div>
             </div>
+
+            {onApplyWeightsToMembers && (
+              <button
+                type="button"
+                onClick={handleApplyWeights}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shadow-2xs cursor-pointer"
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>Apply Weights to Members</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -120,38 +149,43 @@ export function RoomWeightCalculator({
           <div className="p-3 bg-secondary/30 rounded-xs border border-border space-y-1">
             <span className="font-semibold text-foreground flex items-center gap-1.5">
               <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              3. Fair Adjustment
+              3. Transparent Negotiation
             </span>
             <p className="text-[11px] text-muted-foreground">
-              Larger rooms pay their fair share; smaller rooms receive justified discounts.
+              Master bed with attached bath/balcony pays fair premium over smaller rooms.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Comparison Table */}
+      {/* Comparison Matrix Table */}
       <div className="bg-card border border-border rounded-xs p-5 shadow-2xs space-y-4">
         <div className="flex items-center justify-between border-b border-border pb-3">
-          <h3 className="text-sm font-bold text-foreground font-heading">
-            Equal Split vs Room-Weighted Rent Comparison
-          </h3>
-          <span className="text-xs text-muted-foreground">
-            Total Bedrooms: {totalSqFt} sq ft
+          <div className="space-y-0.5">
+            <h3 className="text-sm font-bold text-foreground font-heading">
+              Equal Split vs Room-Area Weighted Rent
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              See the exact difference between splitting equally (৳ {Math.round(equalRent).toLocaleString()}/person) vs proportional sq ft.
+            </p>
+          </div>
+          <span className="text-xs font-semibold text-foreground">
+            Total Flat Area: <strong className="text-primary">{totalSqFt} sq ft</strong>
           </span>
         </div>
 
-        {/* Desktop Table View */}
+        {/* Desktop Comparison Table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-xs text-left">
             <thead>
               <tr className="border-b border-border text-muted-foreground font-medium">
                 <th className="py-2.5 px-3">Roommate</th>
-                <th className="py-2.5 px-3">Room Description</th>
-                <th className="py-2.5 px-3">Room Size (Sq Ft)</th>
-                <th className="py-2.5 px-3">Area Weight</th>
-                <th className="py-2.5 px-3 text-right">Equal Split</th>
-                <th className="py-2.5 px-3 text-right">Weighted Rent</th>
-                <th className="py-2.5 px-3 text-right">Difference</th>
+                <th className="py-2.5 px-3">Room Name</th>
+                <th className="py-2.5 px-3 w-32">Room Size (Sq Ft)</th>
+                <th className="py-2.5 px-3 text-right">Area Ratio</th>
+                <th className="py-2.5 px-3 text-right">Equal Share</th>
+                <th className="py-2.5 px-3 text-right">Weighted Share</th>
+                <th className="py-2.5 px-3 text-right">Adjustment</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
@@ -172,20 +206,11 @@ export function RoomWeightCalculator({
                             unoptimized
                           />
                         </div>
-                        <span className="font-semibold text-foreground flex items-center gap-1">
-                          <span>{row.name}</span>
-                          {row.isCurrentUser && (
-                            <span className="text-[9px] px-1 py-0.2 rounded-xs bg-secondary text-primary font-bold">
-                              You
-                            </span>
-                          )}
-                        </span>
+                        <span className="font-semibold text-foreground">{row.name}</span>
                       </div>
                     </td>
 
-                    <td className="py-3 px-3 text-muted-foreground">
-                      {row.roomName}
-                    </td>
+                    <td className="py-3 px-3 text-muted-foreground">{row.roomName}</td>
 
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-1.5 w-24">
@@ -195,13 +220,13 @@ export function RoomWeightCalculator({
                           step="5"
                           value={row.currentSize}
                           onChange={(e) => handleSizeChange(row.id, e.target.value)}
-                          className="h-8 text-xs font-mono"
+                          className="h-7 text-xs font-mono"
                         />
                         <span className="text-[11px] text-muted-foreground">sqft</span>
                       </div>
                     </td>
 
-                    <td className="py-3 px-3 font-semibold text-foreground font-mono">
+                    <td className="py-3 px-3 text-right font-medium text-foreground">
                       {row.weightPercent}%
                     </td>
 
@@ -217,13 +242,17 @@ export function RoomWeightCalculator({
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-xs text-[11px] font-bold ${
                           isPremium
-                            ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                            ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20"
                             : isDiscount
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                             : "text-muted-foreground"
                         }`}
                       >
-                        {isPremium ? `+ ৳ ${row.difference.toLocaleString()} (Master Room)` : isDiscount ? `- ৳ ${Math.abs(row.difference).toLocaleString()} (Smaller Room)` : "৳ 0"}
+                        {isPremium
+                          ? `+ ৳ ${row.difference.toLocaleString()} (Premium)`
+                          : isDiscount
+                          ? `- ৳ ${Math.abs(row.difference).toLocaleString()} (Discount)`
+                          : "৳ 0"}
                       </span>
                     </td>
                   </tr>

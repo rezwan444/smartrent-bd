@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppSelector } from "@/redux/hook";
 import { toast } from "sonner";
 import {
@@ -14,17 +14,37 @@ import {
   XCircle,
   ArrowRight,
   ShieldCheck,
-  Eye,
+  EyeOff,
   Wrench,
   Clock,
   Check,
+  AlertTriangle,
 } from "lucide-react";
+import { getOwnerProperties } from "@/lib/propertyModerationStorage";
+import type { ModeratedPropertyItem } from "@/types/moderation";
 
 export default function OwnerDashboardPage() {
   const user = useAppSelector((state) => state.auth.user);
   const displayName = user
     ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
     : "Property Owner";
+
+  const ownerQuery = displayName && displayName !== "Property Owner" ? displayName : "Kabir Hossain";
+
+  // Reactive owner properties from unified moderation store
+  const [myProperties, setMyProperties] = useState<ModeratedPropertyItem[]>(() =>
+    getOwnerProperties(ownerQuery)
+  );
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setMyProperties(getOwnerProperties(ownerQuery));
+    };
+    window.addEventListener("smartrent_moderation_updated", handleUpdate);
+    return () => {
+      window.removeEventListener("smartrent_moderation_updated", handleUpdate);
+    };
+  }, [ownerQuery]);
 
   const [visitRequests, setVisitRequests] = useState([
     {
@@ -94,51 +114,34 @@ export default function OwnerDashboardPage() {
     );
   };
 
-  const myProperties = [
-    {
-      id: "prop-01",
-      title: "Master Bedroom with Attached Balcony & Bath",
-      area: "Dhanmondi 27, Dhaka",
-      rent: "৳ 12,000 / month",
-      type: "Single Room",
-      status: "Active",
-      views: 142,
-    },
-    {
-      id: "prop-02",
-      title: "Clean Student Mess Seat (All Utilities Included)",
-      area: "Jaleshwaritola, Bogura",
-      rent: "৳ 3,200 / month",
-      type: "Mess Seat",
-      status: "1 Seat Vacant",
-      views: 89,
-    },
-  ];
-
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-10">
       {/* Welcome Header */}
       <div className="bg-card border border-border rounded-xs p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xs text-[11px] font-semibold bg-secondary text-primary border border-primary/20">
               <Building2 className="w-3.5 h-3.5" />
               <span>Property Owner Portal</span>
             </span>
-            <span className="text-xs text-muted-foreground">• Demo Session</span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xs text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              <ShieldCheck className="w-3 h-3" />
+              <span>Host NID: Verified</span>
+            </span>
+            <span className="text-xs text-muted-foreground">• Demo Landlord Session</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold font-heading text-foreground tracking-tight">
             Welcome, {displayName}!
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Manage your listed student accommodations, review visit requests, and connect with tenants.
+            Manage your listed student accommodations, review visit requests, and track verification inspection status.
           </p>
         </div>
 
         <button
           type="button"
           onClick={() =>
-            toast.info("Property listing form is simulated in this frontend demo.", {
+            toast.info("Property listing submission flow is linked to administrative inspection queue.", {
               duration: 3500,
             })
           }
@@ -156,8 +159,10 @@ export default function OwnerDashboardPage() {
             <Building2 className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xl font-bold text-foreground">2 Listings</p>
-            <p className="text-xs text-muted-foreground">Active in Dhaka & Bogura</p>
+            <p className="text-xl font-bold text-foreground">{myProperties.length} Accommodations</p>
+            <p className="text-xs text-muted-foreground">
+              {myProperties.filter((p) => p.status === "verified").length} Verified & Active
+            </p>
           </div>
         </div>
 
@@ -328,49 +333,95 @@ export default function OwnerDashboardPage() {
         </div>
       </div>
 
-      {/* My Active Listings */}
+      {/* My Accommodations & Verification Status (Feature 3 & 8) */}
       <div className="bg-card border border-border rounded-xs p-5 shadow-2xs space-y-4">
-        <div className="flex items-center justify-between border-b border-border pb-3">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold text-foreground font-heading">
-              My Active Listings
-            </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-border pb-3">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-bold text-foreground font-heading">
+                My Listed Accommodations & Verification Status
+              </h2>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Review live inspection status, admin feedback notes, and visibility on the SmartRent BD public search.
+            </p>
           </div>
-          <span className="text-xs text-muted-foreground">2 listings published</span>
+          <span className="text-xs text-muted-foreground font-medium">
+            {myProperties.length} listings registered
+          </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {myProperties.map((prop) => (
             <div
               key={prop.id}
-              className="border border-border rounded-xs p-4 bg-background space-y-2.5 flex flex-col justify-between"
+              className={`border rounded-xs p-4 bg-background space-y-3 flex flex-col justify-between transition-colors ${
+                prop.status === "pending"
+                  ? "border-amber-500/30"
+                  : prop.status === "rejected"
+                  ? "border-destructive/40 bg-destructive/5"
+                  : prop.isHiddenFromSearch
+                  ? "border-rose-500/40 bg-rose-500/5"
+                  : "border-border"
+              }`}
             >
-              <div className="space-y-1">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-semibold px-1.5 py-0.2 bg-secondary text-primary rounded-xs border border-primary/20">
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 bg-secondary text-primary rounded-xs border border-primary/20 uppercase">
                     {prop.type}
                   </span>
-                  <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>{prop.views} views</span>
-                  </span>
+
+                  {/* Status Badge */}
+                  {prop.isHiddenFromSearch ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-xs border border-rose-500/25">
+                      <EyeOff className="w-3.5 h-3.5" />
+                      <span>Under Safety Review (Hidden)</span>
+                    </span>
+                  ) : prop.status === "verified" ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-xs border border-emerald-500/25">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>Verified & Published</span>
+                    </span>
+                  ) : prop.status === "pending" ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-xs border border-amber-500/25">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>Pending Admin Inspection</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-destructive bg-destructive/10 px-2 py-0.5 rounded-xs border border-destructive/25">
+                      <XCircle className="w-3.5 h-3.5" />
+                      <span>Rejected: Revisions Required</span>
+                    </span>
+                  )}
                 </div>
+
                 <h3 className="text-xs sm:text-sm font-bold text-foreground leading-snug">
                   {prop.title}
                 </h3>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 shrink-0" />
-                  <span>{prop.area}</span>
+                  <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
+                  <span>{prop.location}</span>
                 </p>
                 <p className="text-xs font-bold text-primary pt-0.5">{prop.rent}</p>
+
+                {/* Admin Feedback Notes */}
+                {prop.adminNotes && (
+                  <div className="p-2.5 rounded-xs bg-secondary/60 border border-border text-xs space-y-1 mt-2">
+                    <span className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <span>Moderation Feedback:</span>
+                    </span>
+                    <p className="text-xs text-foreground font-medium">{prop.adminNotes}</p>
+                  </div>
+                )}
               </div>
 
-              <div className="pt-2 border-t border-border/60 flex items-center justify-between text-xs">
-                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground font-medium">
-                  <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-                  <span>{prop.status}</span>
+              <div className="pt-2 border-t border-border/60 flex items-center justify-between text-xs mt-2">
+                <span className="text-[11px] text-muted-foreground font-mono">
+                  Ref: {prop.id}
                 </span>
+
                 <Link
                   href={`/properties/${prop.id}`}
                   className="inline-flex items-center gap-1 text-primary hover:underline font-semibold text-xs"

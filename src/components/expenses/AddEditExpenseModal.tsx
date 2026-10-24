@@ -41,7 +41,8 @@ const CATEGORY_OPTIONS = [
 ];
 
 const SPLIT_OPTIONS = [
-  { value: "equal", label: "Equal Split (1/N per member)" },
+  { value: "equal", label: "Equal Split (1/N per member) — Standard Default" },
+  { value: "custom", label: "Custom Seat / Resident-Level Amounts" },
   { value: "room_weighted", label: "Room-Size Weighted (Based on Sq Ft %)" },
 ];
 
@@ -60,13 +61,16 @@ function ExpenseFormContent({
 }: ExpenseFormContentProps) {
   const [title, setTitle] = useState(expenseToEdit?.title || "");
   const [category, setCategory] = useState<ExpenseCategory>(
-    expenseToEdit?.category || "electricity"
+    expenseToEdit?.category || "rent"
   );
   const [amount, setAmount] = useState<string>(
     expenseToEdit ? String(expenseToEdit.amount) : ""
   );
   const [paidByMemberId, setPaidByMemberId] = useState<string>(
-    expenseToEdit?.paidByMemberId || members[0]?.id || ""
+    expenseToEdit?.paidByMemberId ||
+      members.find((m) => m.isFlatManager)?.id ||
+      members[0]?.id ||
+      ""
   );
   const [splitMethod, setSplitMethod] = useState<SplitMethod>(
     expenseToEdit?.splitMethod || "equal"
@@ -74,6 +78,12 @@ function ExpenseFormContent({
   const [applicableMemberIds, setApplicableMemberIds] = useState<string[]>(
     expenseToEdit?.applicableMemberIds || members.map((m) => m.id)
   );
+  const [customShares, setCustomShares] = useState<Record<string, number>>(() => {
+    if (expenseToEdit?.customShares) return { ...expenseToEdit.customShares };
+    const initialAmt = parseFloat(amount) || 0;
+    const perMember = members.length > 0 ? Math.round(initialAmt / members.length) : 0;
+    return Object.fromEntries(members.map((m) => [m.id, perMember]));
+  });
   const [date, setDate] = useState<string>(
     expenseToEdit?.date || new Date().toISOString().split("T")[0]
   );
@@ -82,7 +92,10 @@ function ExpenseFormContent({
 
   const payerOptions = members.map((m) => ({
     value: m.id,
-    label: m.name + (m.isCurrentUser ? " (You)" : ""),
+    label:
+      m.name +
+      (m.isCurrentUser ? " (You)" : "") +
+      (m.isFlatManager ? " [Flat Manager]" : ""),
     secondaryLabel: m.roomName,
   }));
 
@@ -97,6 +110,14 @@ function ExpenseFormContent({
       setErrorMessage(null);
       setApplicableMemberIds((prev) => prev.filter((id) => id !== memberId));
     }
+  };
+
+  const handleCustomShareChange = (memberId: string, val: string) => {
+    const num = Math.max(0, parseFloat(val) || 0);
+    setCustomShares((prev) => ({
+      ...prev,
+      [memberId]: num,
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -123,6 +144,19 @@ function ExpenseFormContent({
       return;
     }
 
+    if (splitMethod === "custom") {
+      const sumShares = applicableMemberIds.reduce(
+        (sum, id) => sum + (customShares[id] || 0),
+        0
+      );
+      if (Math.abs(sumShares - parsedAmount) > 5) {
+        setErrorMessage(
+          `Custom shares total (৳ ${sumShares.toLocaleString()}) does not match expense amount (৳ ${parsedAmount.toLocaleString()}).`
+        );
+        return;
+      }
+    }
+
     const payload: SharedExpense = {
       id: expenseToEdit ? expenseToEdit.id : `exp-${Date.now()}`,
       title: title.trim(),
@@ -131,6 +165,7 @@ function ExpenseFormContent({
       paidByMemberId,
       splitMethod,
       applicableMemberIds,
+      customShares: splitMethod === "custom" ? customShares : undefined,
       date,
       notes: notes.trim() || undefined,
     };
@@ -172,13 +207,16 @@ function ExpenseFormContent({
           {/* Title */}
           <div className="space-y-1.5">
             <Label htmlFor="expense-title" className="text-xs font-semibold">
-              Expense Description <span className="text-destructive">*</span>
+              Expense Title <span className="text-destructive">*</span>
             </Label>
             <Input
               id="expense-title"
-              placeholder="e.g. DESCO Prepaid Token, Internet Bill"
+              placeholder="e.g. October Flat Rent (Owner Advance) or DESCO Electricity"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setErrorMessage(null);
+              }}
               className="h-10 text-xs"
             />
           </div>
@@ -197,18 +235,26 @@ function ExpenseFormContent({
 
             <div className="space-y-1.5">
               <Label htmlFor="expense-amount" className="text-xs font-semibold">
-                Amount (৳ BDT) <span className="text-destructive">*</span>
+                Amount (BDT ৳) <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="expense-amount"
-                type="number"
-                min="1"
-                step="1"
-                placeholder="e.g. 2400"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="h-10 text-xs"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-bold">
+                  ৳
+                </span>
+                <Input
+                  id="expense-amount"
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="e.g. 24000"
+                  value={amount}
+                  onChange={(e) => {
+                    setAmount(e.target.value);
+                    setErrorMessage(null);
+                  }}
+                  className="h-10 pl-7 text-xs font-mono font-bold"
+                />
+              </div>
             </div>
           </div>
 
@@ -216,7 +262,7 @@ function ExpenseFormContent({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">
-                Paid Out of Pocket By <span className="text-destructive">*</span>
+                Paid By <span className="text-destructive">*</span>
               </Label>
               <AppSelect
                 value={paidByMemberId}
@@ -251,10 +297,55 @@ function ExpenseFormContent({
             />
             <p className="text-[11px] text-muted-foreground">
               {splitMethod === "equal"
-                ? "Divided equally among participating members."
-                : "Divided proportionally based on individual room square-footage %."}
+                ? "Standard: Divided equally among participating roommates."
+                : splitMethod === "custom"
+                ? "Custom: Assign individual rent/bill amounts per resident/seat."
+                : "Optional: Divided proportionally based on room square-footage %."}
             </p>
           </div>
+
+          {/* Custom Shares Inputs when custom split is chosen */}
+          {splitMethod === "custom" && (
+            <div className="space-y-2 p-3 bg-secondary/30 rounded-xs border border-border">
+              <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                <span>Resident Custom Seat Allocations:</span>
+                <span className="font-mono text-primary">
+                  Total: ৳{" "}
+                  {applicableMemberIds
+                    .reduce((sum, id) => sum + (customShares[id] || 0), 0)
+                    .toLocaleString()}
+                </span>
+              </div>
+              <div className="space-y-2 pt-1">
+                {members
+                  .filter((m) => applicableMemberIds.includes(m.id))
+                  .map((m) => (
+                    <div
+                      key={m.id}
+                      className="flex items-center justify-between gap-3 text-xs"
+                    >
+                      <span className="truncate">
+                        {m.name} ({m.roomName}):
+                      </span>
+                      <div className="relative w-32 shrink-0">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground font-bold">
+                          ৳
+                        </span>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={customShares[m.id] ?? 0}
+                          onChange={(e) =>
+                            handleCustomShareChange(m.id, e.target.value)
+                          }
+                          className="h-7 pl-6 text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
 
           {/* Split Between Members Checkbox Group */}
           <div className="space-y-2 pt-1">
@@ -310,7 +401,7 @@ function ExpenseFormContent({
             type="submit"
             className="px-4 py-2 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shadow-2xs cursor-pointer"
           >
-            {expenseToEdit ? "Save Changes" : "Record Expense"}
+            {expenseToEdit ? "Update Expense" : "Save Shared Expense"}
           </button>
         </DialogFooter>
       </form>

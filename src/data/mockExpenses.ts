@@ -1,65 +1,77 @@
-import { HouseholdExpenseData } from "@/types/expense";
+import { HouseholdExpenseData, MultiMonthStore } from "@/types/expense";
 
-export const INITIAL_HOUSEHOLD_DATA: HouseholdExpenseData = {
+export const MOCK_FLAT_MEMBERS = [
+  {
+    id: "mem-01",
+    name: "Rayhan Ahmed",
+    email: "rayhan.ahmed@univ.edu.bd",
+    phone: "+880 1712-345678",
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+    roomName: "Master Bed (Att. Bath & Balcony)",
+    roomSizeSqFt: 180,
+    rentWeightPercent: 32,
+    isCurrentUser: true,
+    isFlatManager: true, // Flat & Rent Manager (pays Landlord)
+    isMessManager: false,
+  },
+  {
+    id: "mem-02",
+    name: "Tanvir Hasan",
+    email: "tanvir.du.cse@gmail.com",
+    phone: "+880 1819-876543",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
+    roomName: "Bed 2 (South Facing)",
+    roomSizeSqFt: 140,
+    rentWeightPercent: 25,
+    isCurrentUser: false,
+    isFlatManager: false,
+    isMessManager: true, // Active Mess Manager (handles meals & bazaar)
+  },
+  {
+    id: "mem-03",
+    name: "Nafis Fuad",
+    email: "nafis.buet.eee@gmail.com",
+    phone: "+880 1911-223344",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
+    roomName: "Bed 3 (Quiet Study Corner)",
+    roomSizeSqFt: 130,
+    rentWeightPercent: 23,
+    isCurrentUser: false,
+    isFlatManager: false,
+    isMessManager: false,
+  },
+  {
+    id: "mem-04",
+    name: "Sajjad Ali",
+    email: "sajjad.dmc@gmail.com",
+    phone: "+880 1612-998877",
+    avatar: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&auto=format&fit=crop&q=80",
+    roomName: "Bed 4 (Compact Single)",
+    roomSizeSqFt: 110,
+    rentWeightPercent: 20,
+    isCurrentUser: false,
+    isFlatManager: false,
+    isMessManager: false,
+  },
+];
+
+export const OCTOBER_2026_DATA: HouseholdExpenseData = {
   householdName: "Padma Nilkhet Student Flat - 4B",
   address: "House 14, Road 3, Nilkhet Katabon, Dhaka (Near DU & BUET)",
   month: "October 2026",
+  monthKey: "2026-10",
+  isArchived: false,
   totalMonthlyRent: 24000,
-  members: [
-    {
-      id: "mem-01",
-      name: "Rayhan Ahmed",
-      email: "rayhan.ahmed@univ.edu.bd",
-      phone: "+880 1712-345678",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-      roomName: "Master Bed (Att. Bath & Balcony)",
-      roomSizeSqFt: 180,
-      rentWeightPercent: 32,
-      isCurrentUser: true,
-    },
-    {
-      id: "mem-02",
-      name: "Tanvir Hasan",
-      email: "tanvir.du.cse@gmail.com",
-      phone: "+880 1819-876543",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-      roomName: "Bed 2 (South Facing)",
-      roomSizeSqFt: 140,
-      rentWeightPercent: 25,
-      isCurrentUser: false,
-    },
-    {
-      id: "mem-03",
-      name: "Nafis Fuad",
-      email: "nafis.buet.eee@gmail.com",
-      phone: "+880 1911-223344",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
-      roomName: "Bed 3 (Quiet Study Corner)",
-      roomSizeSqFt: 130,
-      rentWeightPercent: 23,
-      isCurrentUser: false,
-    },
-    {
-      id: "mem-04",
-      name: "Sajjad Ali",
-      email: "sajjad.dmc@gmail.com",
-      phone: "+880 1612-998877",
-      avatar: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&auto=format&fit=crop&q=80",
-      roomName: "Bed 4 (Compact Single)",
-      roomSizeSqFt: 110,
-      rentWeightPercent: 20,
-      isCurrentUser: false,
-    },
-  ],
+  members: MOCK_FLAT_MEMBERS,
   expenses: [
     {
       id: "exp-01",
-      title: "October Flat Rent (Owner Advance)",
+      title: "October Flat Rent (Advance to Landlord)",
       category: "rent",
       amount: 24000,
-      paidByMemberId: "mem-01",
+      paidByMemberId: "mem-01", // Rayhan (Flat Manager) paid landlord
       date: "2026-10-01",
-      splitMethod: "room_weighted",
+      splitMethod: "equal", // Standard equal split (৳ 6,000 / member)
       applicableMemberIds: ["mem-01", "mem-02", "mem-03", "mem-04"],
       notes: "Paid directly via bKash to Landlord Rahim Chowdhury.",
     },
@@ -109,7 +121,7 @@ export const INITIAL_HOUSEHOLD_DATA: HouseholdExpenseData = {
     },
     {
       id: "exp-06",
-      title: "Building Waste Collection & Water Motor Care",
+      title: "Building Waste Collection & Caretaker Tip",
       category: "waste",
       amount: 600,
       paidByMemberId: "mem-02",
@@ -126,7 +138,7 @@ export const INITIAL_HOUSEHOLD_DATA: HouseholdExpenseData = {
       description: "Monthly Staples: Rice (Nazirshail 25kg), Teer Soybean Oil 5L, Mosur Dal 3kg, Salt & Sugar",
       marketName: "Nilkhet Kacha Bazar",
       amount: 3850,
-      paidByMemberId: "mem-01",
+      paidByMemberId: "mem-02", // Tanvir (Mess Manager)
       items: ["Nazirshail Rice 25kg", "Teer Soybean 5L", "Mosur Dal 3kg", "Salt & Sugar"],
     },
     {
@@ -135,7 +147,7 @@ export const INITIAL_HOUSEHOLD_DATA: HouseholdExpenseData = {
       description: "Protein & Veggies: Broiler Chicken 4kg, 3 Crates Farm Eggs, Potatoes 5kg, Red Onions 3kg",
       marketName: "Katabon Bazar",
       amount: 2600,
-      paidByMemberId: "mem-02",
+      paidByMemberId: "mem-02", // Tanvir (Mess Manager)
       items: ["Broiler Chicken 4kg", "Farm Eggs 3 Crates", "Potatoes 5kg", "Red Onions 3kg"],
     },
     {
@@ -165,3 +177,124 @@ export const INITIAL_HOUSEHOLD_DATA: HouseholdExpenseData = {
   },
   settledTransactions: [],
 };
+
+export const SEPTEMBER_2026_DATA: HouseholdExpenseData = {
+  householdName: "Padma Nilkhet Student Flat - 4B",
+  address: "House 14, Road 3, Nilkhet Katabon, Dhaka (Near DU & BUET)",
+  month: "September 2026",
+  monthKey: "2026-09",
+  isArchived: true, // Closed & Settled Historical Month
+  totalMonthlyRent: 24000,
+  members: [
+    { ...MOCK_FLAT_MEMBERS[0], isMessManager: false },
+    { ...MOCK_FLAT_MEMBERS[1], isMessManager: false },
+    { ...MOCK_FLAT_MEMBERS[2], isMessManager: true }, // Nafis was September Mess Manager
+    { ...MOCK_FLAT_MEMBERS[3], isMessManager: false },
+  ],
+  expenses: [
+    {
+      id: "exp-sep-01",
+      title: "September Flat Rent (Settled)",
+      category: "rent",
+      amount: 24000,
+      paidByMemberId: "mem-01",
+      date: "2026-09-01",
+      splitMethod: "equal",
+      applicableMemberIds: ["mem-01", "mem-02", "mem-03", "mem-04"],
+      notes: "Bank transfer to landlord.",
+    },
+    {
+      id: "exp-sep-02",
+      title: "DESCO Prepaid Electricity (September)",
+      category: "electricity",
+      amount: 2200,
+      paidByMemberId: "mem-03",
+      date: "2026-09-05",
+      splitMethod: "equal",
+      applicableMemberIds: ["mem-01", "mem-02", "mem-03", "mem-04"],
+    },
+    {
+      id: "exp-sep-03",
+      title: "Carnival Fiber Internet (September)",
+      category: "internet",
+      amount: 1200,
+      paidByMemberId: "mem-02",
+      date: "2026-09-06",
+      splitMethod: "equal",
+      applicableMemberIds: ["mem-01", "mem-02", "mem-03", "mem-04"],
+    },
+    {
+      id: "exp-sep-04",
+      title: "Khala / Maid Monthly Salary",
+      category: "maid",
+      amount: 4000,
+      paidByMemberId: "mem-04",
+      date: "2026-09-10",
+      splitMethod: "equal",
+      applicableMemberIds: ["mem-01", "mem-02", "mem-03", "mem-04"],
+    },
+  ],
+  bazaarEntries: [
+    {
+      id: "baz-sep-01",
+      date: "2026-09-03",
+      description: "Monthly Dry Grocery & Spices",
+      marketName: "Nilkhet Kacha Bazar",
+      amount: 3600,
+      paidByMemberId: "mem-03", // Nafis (Mess Manager)
+      items: ["Rice 25kg", "Soybean Oil 5L", "Lentils", "Salt & Sugar"],
+    },
+    {
+      id: "baz-sep-02",
+      date: "2026-09-10",
+      description: "Chicken & Eggs Week 2",
+      marketName: "Katabon Bazar",
+      amount: 2500,
+      paidByMemberId: "mem-03",
+      items: ["Chicken 4kg", "Eggs 2 crates"],
+    },
+    {
+      id: "baz-sep-03",
+      date: "2026-09-18",
+      description: "Fish & Fresh Vegetables Week 3",
+      marketName: "Palashi Bazar",
+      amount: 2300,
+      paidByMemberId: "mem-01",
+      items: ["Fish 2kg", "Vegetables"],
+    },
+    {
+      id: "baz-sep-04",
+      date: "2026-09-25",
+      description: "Beef & Final Week Grocery",
+      marketName: "New Market Kacha Bazar",
+      amount: 2400,
+      paidByMemberId: "mem-03",
+      items: ["Beef 2kg", "Potatoes", "Onions"],
+    },
+  ],
+  mealCounts: {
+    "mem-01": 46,
+    "mem-02": 44,
+    "mem-03": 45,
+    "mem-04": 45,
+  },
+  // All historical transactions in September were settled
+  settledTransactions: [
+    "settle-rent-mem-02-mem-01",
+    "settle-rent-mem-03-mem-01",
+    "settle-rent-mem-04-mem-01",
+    "settle-mess-mem-01-mem-03",
+    "settle-mess-mem-02-mem-03",
+    "settle-mess-mem-04-mem-03",
+  ],
+};
+
+export const DEFAULT_MULTI_MONTH_DATA: MultiMonthStore = {
+  activeMonthKey: "2026-10",
+  months: {
+    "2026-10": OCTOBER_2026_DATA,
+    "2026-09": SEPTEMBER_2026_DATA,
+  },
+};
+
+export const INITIAL_HOUSEHOLD_DATA = OCTOBER_2026_DATA;

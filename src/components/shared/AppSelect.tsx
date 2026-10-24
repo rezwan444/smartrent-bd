@@ -53,12 +53,12 @@ export function AppSelect({
         </SelectTrigger>
         <SelectContent
           className={cn(
-            "bg-popover border border-border rounded-xs shadow-lg min-w-[12rem] z-50",
+            "bg-popover border border-border rounded-xs shadow-lg min-w-[12rem] z-[70]",
             contentClassName
           )}
         >
           {options.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
+            <SelectItem key={opt.value} value={opt.value} textValue={opt.label}>
               <div className="flex items-center justify-between w-full gap-3">
                 <span className="font-medium text-foreground">{opt.label}</span>
                 {opt.secondaryLabel && (

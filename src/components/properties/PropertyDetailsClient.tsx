@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   MapPin,
@@ -21,6 +21,8 @@ import {
   FileText,
   Building,
   UserCheck,
+  XCircle,
+  EyeOff,
 } from "lucide-react";
 import { IProperty, PropertyType } from "@/types/property";
 import { FACILITY_DEFINITIONS } from "@/lib/propertyFilters";
@@ -28,6 +30,7 @@ import { PropertyGallery } from "./PropertyGallery";
 import { PropertyLocationSection } from "./PropertyLocationSection";
 import { PropertyOwnerCard } from "./PropertyOwnerCard";
 import { RequestVisitModal } from "./RequestVisitModal";
+import { getModerationStore } from "@/lib/propertyModerationStorage";
 import { ReportListingModal } from "./ReportListingModal";
 
 interface PropertyDetailsClientProps {
@@ -72,6 +75,38 @@ const GENDER_LABELS: Record<string, string> = {
 };
 
 export function PropertyDetailsClient({ property }: PropertyDetailsClientProps) {
+  // Moderation state synced with storage and live events
+  const [moderationState, setModerationState] = useState(() => {
+    const store = getModerationStore();
+    const item = store.properties.find((p) => p.id === property.id);
+    const activeReport = store.scamReports.find(
+      (r) => r.propertyId === property.id && r.status !== "dismissed"
+    );
+    return {
+      item,
+      isSuppressed: Boolean(item?.isHiddenFromSearch || activeReport),
+      status: item?.status || (property.isVerified ? "verified" : "pending"),
+      reportReason: activeReport?.reason,
+    };
+  });
+
+  useEffect(() => {
+    const update = () => {
+      const store = getModerationStore();
+      const item = store.properties.find((p) => p.id === property.id);
+      const activeReport = store.scamReports.find(
+        (r) => r.propertyId === property.id && r.status !== "dismissed"
+      );
+      setModerationState({
+        item,
+        isSuppressed: Boolean(item?.isHiddenFromSearch || activeReport),
+        status: item?.status || (property.isVerified ? "verified" : "pending"),
+        reportReason: activeReport?.reason,
+      });
+    };
+    window.addEventListener("smartrent_moderation_updated", update);
+    return () => window.removeEventListener("smartrent_moderation_updated", update);
+  }, [property.id, property.isVerified]);
   // Modal states
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -188,6 +223,26 @@ export function PropertyDetailsClient({ property }: PropertyDetailsClientProps) 
           </Link>
         </div>
 
+        {/* Safety Investigation Banner (Track C3 Rule 8) */}
+        {moderationState.isSuppressed && (
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xs p-4 flex items-start gap-3 text-amber-900 dark:text-amber-200">
+            <ShieldAlert className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+            <div className="space-y-1 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm">Under Safety Review (Hidden from Public Search)</span>
+                <span className="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded-xs bg-amber-500/20 text-amber-800 dark:text-amber-300">
+                  Track C3 Rule 8
+                </span>
+              </div>
+              <p>
+                This accommodation listing has been reported by a student tenant
+                {moderationState.reportReason ? ` for "${moderationState.reportReason}"` : ""}.
+                In compliance with SmartRent BD safety policy, it is temporarily suppressed from public search results while moderators complete an on-site or document review.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* 2. Title & Primary Badges Header */}
         <div className="bg-card border border-border rounded-xs p-5 sm:p-6 space-y-3 shadow-2xs">
           <div className="flex flex-wrap items-center gap-2">
@@ -197,10 +252,20 @@ export function PropertyDetailsClient({ property }: PropertyDetailsClientProps) 
               {typeBadge.label}
             </span>
 
-            {property.isVerified ? (
+            {moderationState.isSuppressed ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xs text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                <EyeOff className="w-3.5 h-3.5" />
+                <span>Hidden (Safety Review)</span>
+              </span>
+            ) : moderationState.status === "verified" ? (
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xs text-xs font-semibold bg-secondary text-primary border border-primary/25">
                 <ShieldCheck className="w-3.5 h-3.5 text-primary" />
                 <span>Verified Listing</span>
+              </span>
+            ) : moderationState.status === "rejected" ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xs text-xs font-semibold bg-destructive/10 text-destructive border border-destructive/25">
+                <XCircle className="w-3.5 h-3.5" />
+                <span>Listing Rejected by Admin</span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xs text-xs font-medium bg-background text-muted-foreground border border-border">

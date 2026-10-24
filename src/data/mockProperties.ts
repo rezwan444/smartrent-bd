@@ -1,4 +1,4 @@
-import { IProperty } from "@/types/property";
+import type { IProperty } from "../types/property.ts";
 
 /**
  * Curated mock property records for SmartRent BD.

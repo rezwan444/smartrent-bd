@@ -7,6 +7,34 @@ export const SIDEBAR_ITEMS = [
     icon: "LayoutDashboard",
     roles: ["ADMIN", "SUPER_ADMIN", "STAFF"],
   },
+  {
+    id: "admin-listings",
+    label: "Listing Verification",
+    href: "/dashboard/admin?tab=listings",
+    icon: "FileCheck2",
+    roles: ["ADMIN", "SUPER_ADMIN", "STAFF"],
+  },
+  {
+    id: "admin-owners",
+    label: "Owner NID Verification",
+    href: "/dashboard/admin?tab=owners",
+    icon: "UserCheck2",
+    roles: ["ADMIN", "SUPER_ADMIN", "STAFF"],
+  },
+  {
+    id: "admin-scams",
+    label: "Scam Reports & Search Suppression",
+    href: "/dashboard/admin?tab=scams",
+    icon: "ShieldAlert",
+    roles: ["ADMIN", "SUPER_ADMIN", "STAFF"],
+  },
+  {
+    id: "admin-logs",
+    label: "Moderation Audit Trail",
+    href: "/dashboard/admin?tab=logs",
+    icon: "History",
+    roles: ["ADMIN", "SUPER_ADMIN", "STAFF"],
+  },
   // ===== STUDENT / TENANT =====
   {
     id: "student-dashboard",
@@ -20,21 +48,21 @@ export const SIDEBAR_ITEMS = [
     label: "Roommate Matching",
     href: "/roommates",
     icon: "Users",
-    roles: ["STUDENT", "CUSTOMER", "ADMIN"],
+    roles: ["STUDENT", "CUSTOMER"],
   },
   {
     id: "student-expenses",
     label: "Shared Expenses & Mess",
     href: "/dashboard/student/expenses",
     icon: "LuDollarSign",
-    roles: ["STUDENT", "CUSTOMER", "ADMIN"],
+    roles: ["STUDENT", "CUSTOMER"],
   },
   {
     id: "student-maintenance",
     label: "Maintenance & Alerts",
     href: "/dashboard/student/maintenance",
     icon: "CalendarCheck",
-    roles: ["STUDENT", "CUSTOMER", "ADMIN"],
+    roles: ["STUDENT", "CUSTOMER"],
   },
   // ===== PROPERTY OWNER =====
   {

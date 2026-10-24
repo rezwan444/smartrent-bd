@@ -5,7 +5,7 @@ import type React from "react";
 import { SIDEBAR_ITEMS, WEBSITE_DETAILS } from "@/lib/constants";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useAppSelector } from "@/redux/hook";
 import { Icons } from "../../utils/icons";
 import { LogoutButton } from "./LogoutButton";
@@ -18,6 +18,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const reduxUser = useAppSelector((state) => state.auth.user);
 
   const activeRole =
@@ -41,26 +42,46 @@ export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
       ? "/dashboard/owner"
       : "/dashboard/admin";
 
+  const isItemActive = (itemHref: string) => {
+    if (itemHref.includes("?")) {
+      const [itemPath, itemQuery] = itemHref.split("?");
+      if (pathname !== itemPath) return false;
+      const itemParams = new URLSearchParams(itemQuery);
+      for (const [key, val] of itemParams.entries()) {
+        if (searchParams.get(key) !== val) return false;
+      }
+      return true;
+    }
+    if (itemHref === "/dashboard/admin") {
+      return pathname === "/dashboard/admin" && !searchParams.get("tab");
+    }
+    return pathname === itemHref;
+  };
+
   const getIcon = (iconName: string) => {
     const iconMap: Record<string, React.ReactNode> = {
       LayoutDashboard: <Icons.LayoutDashboard className="w-5 h-5" />, // dashboard
-      CalendarCheck: <Icons.CalendarCheck className="w-5 h-5" />, // Season Management
-      Users: <Icons.Users className="w-5 h-5" />, // Team Management
-      LuUserCog: <Icons.LuUserCog className="w-5 h-5" />, // Player Management
-      CiStreamOn: <Icons.CiStreamOn className="w-5 h-5" />, // Streaming Approval
+      FileCheck2: <Icons.FileCheck2 className="w-5 h-5" />, // Listing Verification
+      UserCheck2: <Icons.UserCheck2 className="w-5 h-5" />, // Owner NID Verification
+      ShieldAlert: <Icons.ShieldAlert className="w-5 h-5" />, // Scam Reports & Suppression
+      History: <Icons.History className="w-5 h-5" />, // Moderation Audit Trail
+      CalendarCheck: <Icons.CalendarCheck className="w-5 h-5" />, // Maintenance & Alerts
+      Users: <Icons.Users className="w-5 h-5" />, // Roommate Matching
+      LuUserCog: <Icons.LuUserCog className="w-5 h-5" />,
+      CiStreamOn: <Icons.CiStreamOn className="w-5 h-5" />,
 
-      Trophy: <Icons.Trophy className="w-5.5 h-5.5" />, // Season Standings
-      MonitorPlay: <Icons.MonitorPlay className="w-5 h-5" />, // Live Matches
-      Calendar: <Icons.Calendar className="w-5 h-5" />, // Scheduled Matches
-      GoListOrdered: <Icons.GoListOrdered className="w-5 h-5" />, // Waitlist Control
-      LuDollarSign: <Icons.LuDollarSign className="w-5 h-5" />, // Financial Center
+      Trophy: <Icons.Trophy className="w-5.5 h-5.5" />,
+      MonitorPlay: <Icons.MonitorPlay className="w-5 h-5" />,
+      Calendar: <Icons.Calendar className="w-5 h-5" />,
+      GoListOrdered: <Icons.GoListOrdered className="w-5 h-5" />,
+      LuDollarSign: <Icons.LuDollarSign className="w-5 h-5" />, // Expenses
 
-      RiAdvertisementLine: <Icons.RiAdvertisementLine className="w-5 h-5" />, // Sponsor/ Ad control
-      RiFlag2Line: <Icons.RiFlag2Line className="w-5 h-5" />, // Flag Management
+      RiAdvertisementLine: <Icons.RiAdvertisementLine className="w-5 h-5" />,
+      RiFlag2Line: <Icons.RiFlag2Line className="w-5 h-5" />,
       MdOutlineSubscriptions: (
         <Icons.MdOutlineSubscriptions className="w-5 h-5" />
-      ), // Subscription plan
-      Settings: <Icons.Settings className="w-5 h-5" />, // System Settings
+      ),
+      Settings: <Icons.Settings className="w-5 h-5" />,
     };
     return iconMap[iconName];
   };
@@ -105,18 +126,6 @@ export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
                     isCollapsed ? "h-9 w-12 object-center" : "h-10 w-36"
                   }`}
                 />
-
-                {/* TEXT */}
-                {/* {!isCollapsed && (
-                  <div className="hidden lg:flex flex-col justify-center leading-none">
-                    <span className="text-sm font-semibold text-foreground tracking-wide">
-                      {WEBSITE_DETAILS.SITE_DASHBOARD_TITLE}
-                    </span>
-                    <span className="text-[0.73rem] font-medium text-muted-foreground mt-0.5">
-                      {WEBSITE_DETAILS.SITE_DASHBOARD_SUBTITLE}
-                    </span>
-                  </div>
-                )} */}
               </Link>
             </div>
 
@@ -131,7 +140,7 @@ export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
 
           <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-2">
             {visibleItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = isItemActive(item.href);
               return (
                 <Link
                   key={item.id}
@@ -153,7 +162,6 @@ export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
             })}
           </nav>
           <div className="p-4 border-t">
-            {/* <LogoutButton isCollapsed={isCollapsed} /> */}
             <LogoutButton isCollapsed={isCollapsed} />
           </div>
         </div>

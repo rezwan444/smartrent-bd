@@ -148,14 +148,17 @@ function LoginFormContent() {
     );
   };
 
-  const handleQuickFill = (role: "student" | "owner") => {
+  const handleQuickFill = (role: "student" | "owner" | "admin") => {
     clearErrors();
     if (role === "student") {
       setValue("email", "student@smartrentbd.com", { shouldValidate: true });
       setValue("password", "student123", { shouldValidate: true });
-    } else {
+    } else if (role === "owner") {
       setValue("email", "owner@smartrentbd.com", { shouldValidate: true });
       setValue("password", "owner123", { shouldValidate: true });
+    } else {
+      setValue("email", "admin@smartrentbd.com", { shouldValidate: true });
+      setValue("password", "admin123", { shouldValidate: true });
     }
   };
 
@@ -209,6 +212,13 @@ function LoginFormContent() {
             className="px-2 py-0.5 text-[11px] font-medium bg-card hover:bg-secondary text-foreground border border-border rounded-xs transition-colors cursor-pointer"
           >
             Owner
+          </button>
+          <button
+            type="button"
+            onClick={() => handleQuickFill("admin")}
+            className="px-2 py-0.5 text-[11px] font-medium bg-card hover:bg-secondary text-primary border border-primary/20 rounded-xs transition-colors cursor-pointer"
+          >
+            Admin
           </button>
         </div>
       </div>

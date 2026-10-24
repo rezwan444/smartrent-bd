@@ -53,6 +53,18 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     location: "Bogura, Bangladesh",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=customer",
   },
+  admin: {
+    id: "demo-admin-01",
+    name: "Admin Moderator",
+    email: "admin@smartrentbd.com",
+    role: IRole.ADMIN,
+    roleLabel: "Administrator",
+    password: "admin123",
+    dashboardPath: "/dashboard/admin",
+    phone: "+880 1900-445566",
+    location: "Dhaka Central",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=admin",
+  },
   staff: {
     id: "demo-staff-02",
     name: "Staff User",

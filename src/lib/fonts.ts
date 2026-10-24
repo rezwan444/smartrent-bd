@@ -1,15 +1,11 @@
-import { Hind_Siliguri, Inter } from "next/font/google";
-
-export const fontSans = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+export const fontSans = {
   variable: "--font-inter",
-  display: "swap",
-});
+  className: "font-sans",
+  style: { fontFamily: "'Inter', system-ui, -apple-system, sans-serif" },
+};
 
-export const fontBengali = Hind_Siliguri({
-  subsets: ["bengali", "latin"],
-  weight: ["400", "500", "600", "700"],
+export const fontBengali = {
   variable: "--font-hind-siliguri",
-  display: "swap",
-});
+  className: "font-bengali",
+  style: { fontFamily: "'Hind Siliguri', 'Inter', system-ui, sans-serif" },
+};

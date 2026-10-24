@@ -1,15 +1,18 @@
-import {
+import type {
   FlatMember,
   MemberFinancialSummary,
   SettlementTransaction,
   HouseholdExpenseData,
-} from "@/types/expense";
+} from "../types/expense";
 
 /**
- * Calculates financial summaries and who-owes-whom settlement for a household.
+ * Calculates financial summaries and independent who-owes-whom settlements for a household.
+ * Strictly isolates Rent & Utilities from Mess Meal Accounts so liabilities are never cross-cancelled.
  */
 export function calculateHouseholdFinances(data: HouseholdExpenseData): {
   memberSummaries: MemberFinancialSummary[];
+  rentSettlements: SettlementTransaction[];
+  messSettlements: SettlementTransaction[];
   settlementTransactions: SettlementTransaction[];
   totalExpenses: number;
   totalRentAndBills: number;
@@ -17,26 +20,62 @@ export function calculateHouseholdFinances(data: HouseholdExpenseData): {
   totalMeals: number;
   mealRate: number;
 } {
-  const { members, expenses, bazaarEntries, mealCounts, settledTransactions = [] } = data;
+  const {
+    members = [],
+    expenses = [],
+    bazaarEntries = [],
+    mealCounts = {},
+    settledTransactions = [],
+  } = data || {};
 
-  // 1. Initialize tracking structures
-  const paidMap: Record<string, number> = {};
+  if (!members || members.length === 0) {
+    return {
+      memberSummaries: [],
+      rentSettlements: [],
+      messSettlements: [],
+      settlementTransactions: [],
+      totalExpenses: 0,
+      totalRentAndBills: 0,
+      totalBazaar: 0,
+      totalMeals: 0,
+      mealRate: 0,
+    };
+  }
+
+  // 1. Initialize independent tracking structures
+  const fixedPaidMap: Record<string, number> = {};
   const fixedShareMap: Record<string, number> = {};
+  const messPaidMap: Record<string, number> = {};
 
   members.forEach((m) => {
-    paidMap[m.id] = 0;
+    fixedPaidMap[m.id] = 0;
     fixedShareMap[m.id] = 0;
+    messPaidMap[m.id] = 0;
   });
 
-  // 2. Process Shared Expenses (Rent, Bills, Maid, etc.)
+  const defaultFlatManagerId =
+    members.find((m) => m.isFlatManager)?.id || members[0]?.id;
+  const defaultMessManagerId =
+    members.find((m) => m.isMessManager)?.id || members[0]?.id;
+
+  // 2. Process Shared Expenses (Rent, Bills, Maid, etc.) - Isolated Rent Account
   let totalRentAndBills = 0;
 
   expenses.forEach((expense) => {
-    totalRentAndBills += expense.amount;
+    const rawAmt = Number(expense?.amount);
+    const safeAmount = Number.isFinite(rawAmt) && rawAmt > 0 ? rawAmt : 0;
+    if (safeAmount <= 0) return;
 
-    // Credit the payer
-    if (paidMap[expense.paidByMemberId] !== undefined) {
-      paidMap[expense.paidByMemberId] += expense.amount;
+    totalRentAndBills += safeAmount;
+
+    // Credit the payer in the Fixed/Rent account
+    const payerId =
+      expense.paidByMemberId && fixedPaidMap[expense.paidByMemberId] !== undefined
+        ? expense.paidByMemberId
+        : defaultFlatManagerId;
+
+    if (payerId && fixedPaidMap[payerId] !== undefined) {
+      fixedPaidMap[payerId] += safeAmount;
     }
 
     // Determine who splits this expense
@@ -46,99 +85,158 @@ export function calculateHouseholdFinances(data: HouseholdExpenseData): {
         : members.map((m) => m.id);
 
     const targetMembers = members.filter((m) => targetMemberIds.includes(m.id));
-    if (targetMembers.length === 0) return;
+    if (targetMembers.length === 0) {
+      const perPerson = safeAmount / members.length;
+      members.forEach((m) => {
+        fixedShareMap[m.id] = (fixedShareMap[m.id] || 0) + perPerson;
+      });
+      return;
+    }
 
     if (expense.splitMethod === "room_weighted") {
-      // Normalize rent weights among participating members
-      const totalWeight = targetMembers.reduce(
-        (sum, m) => sum + (m.rentWeightPercent || 0),
-        0
-      );
+      const totalWeight = targetMembers.reduce((sum, m) => {
+        const w = Number(m.rentWeightPercent);
+        return sum + (Number.isFinite(w) && w > 0 ? w : 0);
+      }, 0);
 
       targetMembers.forEach((m) => {
-        const ratio = totalWeight > 0 ? (m.rentWeightPercent || 0) / totalWeight : 1 / targetMembers.length;
-        fixedShareMap[m.id] = (fixedShareMap[m.id] || 0) + expense.amount * ratio;
+        const w = Number(m.rentWeightPercent);
+        const validWeight = Number.isFinite(w) && w > 0 ? w : 0;
+        const ratio = totalWeight > 0 ? validWeight / totalWeight : 1 / targetMembers.length;
+        fixedShareMap[m.id] = (fixedShareMap[m.id] || 0) + safeAmount * ratio;
       });
     } else if (expense.splitMethod === "custom" && expense.customShares) {
       targetMembers.forEach((m) => {
-        const customAmt = expense.customShares?.[m.id] || 0;
-        fixedShareMap[m.id] = (fixedShareMap[m.id] || 0) + customAmt;
+        const customAmt = Number(expense.customShares?.[m.id]);
+        const validCustomAmt = Number.isFinite(customAmt) && customAmt > 0 ? customAmt : 0;
+        fixedShareMap[m.id] = (fixedShareMap[m.id] || 0) + validCustomAmt;
       });
     } else {
-      // Default: Equal split
-      const perPerson = expense.amount / targetMembers.length;
+      // Default: Equal split (1/N)
+      const perPerson = safeAmount / targetMembers.length;
       targetMembers.forEach((m) => {
         fixedShareMap[m.id] = (fixedShareMap[m.id] || 0) + perPerson;
       });
     }
   });
 
-  // 3. Process Bazaar / Grocery Shopping
+  // 3. Process Bazaar / Grocery Shopping - Isolated Mess Account
   let totalBazaar = 0;
   bazaarEntries.forEach((entry) => {
-    totalBazaar += entry.amount;
-    if (paidMap[entry.paidByMemberId] !== undefined) {
-      paidMap[entry.paidByMemberId] += entry.amount;
+    const rawAmt = Number(entry?.amount);
+    const safeAmount = Number.isFinite(rawAmt) && rawAmt > 0 ? rawAmt : 0;
+    if (safeAmount <= 0) return;
+
+    totalBazaar += safeAmount;
+
+    const payerId =
+      entry.paidByMemberId && messPaidMap[entry.paidByMemberId] !== undefined
+        ? entry.paidByMemberId
+        : defaultMessManagerId;
+
+    if (payerId && messPaidMap[payerId] !== undefined) {
+      messPaidMap[payerId] += safeAmount;
     }
   });
 
-  // 4. Process Mess Meals & Meal Rate
+  // 4. Process Mess Meals & Dynamic Meal Rate
   let totalMeals = 0;
   members.forEach((m) => {
-    const meals = mealCounts[m.id] || 0;
+    const rawMeals = Number(mealCounts?.[m.id]);
+    const meals = Number.isFinite(rawMeals) && rawMeals > 0 ? rawMeals : 0;
     totalMeals += meals;
   });
 
   const mealRate = totalMeals > 0 ? totalBazaar / totalMeals : 0;
 
-  // 5. Build Member Summaries
+  // 5. Build Member Summaries with strict dual-account independence
   const memberSummaries: MemberFinancialSummary[] = members.map((m) => {
-    const totalPaid = paidMap[m.id] || 0;
-    const fixedShare = fixedShareMap[m.id] || 0;
-    const mealCount = mealCounts[m.id] || 0;
-    const messCost = mealCount * mealRate;
+    const rawFixedPaid = fixedPaidMap[m.id] || 0;
+    const rawFixedShare = fixedShareMap[m.id] || 0;
+    const fixedPaid = Math.round(rawFixedPaid);
+    const fixedShare = Math.round(rawFixedShare);
+    const fixedBalance = fixedPaid - fixedShare; // Rent balance
+
+    const rawMessPaid = messPaidMap[m.id] || 0;
+    const rawMeals = Number(mealCounts?.[m.id]);
+    const mealCount = Number.isFinite(rawMeals) && rawMeals > 0 ? rawMeals : 0;
+    const rawMessCost = mealCount * mealRate;
+    const messPaid = Math.round(rawMessPaid);
+    const messCost = Math.round(rawMessCost);
+    const messBalance = messPaid - messCost; // Mess balance
+
+    const totalPaid = fixedPaid + messPaid;
     const totalDue = fixedShare + messCost;
-    const netBalance = totalPaid - totalDue;
+    const netBalance = fixedBalance + messBalance; // Combined net position
 
     return {
       memberId: m.id,
       name: m.name,
       avatar: m.avatar,
       roomName: m.roomName,
-      totalPaid: Math.round(totalPaid),
-      fixedShare: Math.round(fixedShare),
+      fixedPaid,
+      fixedShare,
+      fixedBalance,
+      messPaid,
       mealCount,
-      messCost: Math.round(messCost),
-      totalDue: Math.round(totalDue),
-      netBalance: Math.round(netBalance),
+      messCost,
+      messBalance,
+      totalPaid,
+      totalDue,
+      netBalance,
     };
   });
 
-  // 6. Calculate Greedy Simplified Settlement Plan ("Who Owes Whom")
-  const settlementTransactions = calculateSettlementPlan(
-    memberSummaries,
+  // 6. Calculate SEPARATE settlement plans so liabilities are never cross-offset
+  const rentSettlements = calculateSubAccountSettlements(
+    memberSummaries.map((s) => ({
+      memberId: s.memberId,
+      name: s.name,
+      balance: s.fixedBalance,
+    })),
+    "rent_utility",
+    "Rent & Fixed Utilities",
+    "Flat / Rent Manager (Landlord Payer)",
     settledTransactions
   );
 
+  const messSettlements = calculateSubAccountSettlements(
+    memberSummaries.map((s) => ({
+      memberId: s.memberId,
+      name: s.name,
+      balance: s.messBalance,
+    })),
+    "mess_food",
+    "Mess Meal Account",
+    "Mess Manager (Grocery Payer)",
+    settledTransactions
+  );
+
+  const settlementTransactions = [...rentSettlements, ...messSettlements];
   const totalExpenses = totalRentAndBills + totalBazaar;
 
   return {
     memberSummaries,
+    rentSettlements,
+    messSettlements,
     settlementTransactions,
     totalExpenses: Math.round(totalExpenses),
     totalRentAndBills: Math.round(totalRentAndBills),
     totalBazaar: Math.round(totalBazaar),
     totalMeals,
-    mealRate: Math.round(mealRate * 10) / 10, // 1 decimal place e.g. 78.5
+    mealRate: Math.round(mealRate * 10) / 10,
   };
 }
 
 /**
  * Greedy pairing algorithm for debtor-creditor settlement simplification.
- * Minimizes the number of cash/bKash handoffs required.
+ * Operates independently on a specific sub-account (Rent or Mess).
  */
-export function calculateSettlementPlan(
-  summaries: MemberFinancialSummary[],
+export function calculateSubAccountSettlements(
+  nodes: { memberId: string; name: string; balance: number }[],
+  type: "rent_utility" | "mess_food",
+  categoryLabel: string,
+  recipientRole: string,
   settledIds: string[] = []
 ): SettlementTransaction[] {
   interface BalanceNode {
@@ -147,15 +245,14 @@ export function calculateSettlementPlan(
     balance: number;
   }
 
-  // Clones to mutate
   const debtors: BalanceNode[] = [];
   const creditors: BalanceNode[] = [];
 
-  summaries.forEach((s) => {
-    if (s.netBalance < -1) {
-      debtors.push({ memberId: s.memberId, name: s.name, balance: s.netBalance });
-    } else if (s.netBalance > 1) {
-      creditors.push({ memberId: s.memberId, name: s.name, balance: s.netBalance });
+  nodes.forEach((s) => {
+    if (s.balance < 0) {
+      debtors.push({ memberId: s.memberId, name: s.name, balance: s.balance });
+    } else if (s.balance > 0) {
+      creditors.push({ memberId: s.memberId, name: s.name, balance: s.balance });
     }
   });
 
@@ -177,8 +274,10 @@ export function calculateSettlementPlan(
     const settledAmount = Math.min(oweAmount, canReceive);
 
     if (settledAmount > 0) {
-      const txId = `settle-${debtor.memberId}-${creditor.memberId}`;
-      const isSettled = settledIds.includes(txId);
+      const typePrefix = type === "rent_utility" ? "settle-rent" : "settle-mess";
+      const txId = `${typePrefix}-${debtor.memberId}-${creditor.memberId}`;
+      const legacyTxId = `settle-${debtor.memberId}-${creditor.memberId}`;
+      const isSettled = settledIds.includes(txId) || settledIds.includes(legacyTxId);
 
       transactions.push({
         id: txId,
@@ -187,6 +286,9 @@ export function calculateSettlementPlan(
         toMemberId: creditor.memberId,
         toName: creditor.name,
         amount: Math.round(settledAmount),
+        type,
+        categoryLabel,
+        recipientRole,
         status: isSettled ? "settled" : "pending",
       });
 
@@ -194,15 +296,49 @@ export function calculateSettlementPlan(
       creditor.balance -= settledAmount;
     }
 
-    if (Math.abs(debtor.balance) < 1) {
+    if (Math.abs(debtor.balance) < 0.001) {
       dIdx++;
     }
-    if (creditor.balance < 1) {
+    if (Math.abs(creditor.balance) < 0.001) {
       cIdx++;
     }
   }
 
   return transactions;
+}
+
+/**
+ * Backward-compatible helper for combined settlement plan
+ */
+export function calculateSettlementPlan(
+  summaries: MemberFinancialSummary[],
+  settledIds: string[] = []
+): SettlementTransaction[] {
+  const rent = calculateSubAccountSettlements(
+    summaries.map((s) => ({
+      memberId: s.memberId,
+      name: s.name,
+      balance: s.fixedBalance !== undefined ? s.fixedBalance : (s.netBalance || 0),
+    })),
+    "rent_utility",
+    "Rent & Fixed Utilities",
+    "Flat / Rent Manager",
+    settledIds
+  );
+
+  const mess = calculateSubAccountSettlements(
+    summaries.map((s) => ({
+      memberId: s.memberId,
+      name: s.name,
+      balance: s.messBalance !== undefined ? s.messBalance : 0,
+    })),
+    "mess_food",
+    "Mess Meal Account",
+    "Mess Manager",
+    settledIds
+  );
+
+  return [...rent, ...mess];
 }
 
 /**
@@ -221,19 +357,26 @@ export function calculateRoomWeightComparison(
   equalRent: number;
   difference: number; // positive = pays more under weighted, negative = pays less
 }[] {
-  const totalSqFt = members.reduce((sum, m) => sum + (m.roomSizeSqFt || 0), 0);
-  const equalRent = members.length > 0 ? totalRent / members.length : 0;
+  if (!members || members.length === 0) return [];
+  const safeRent = Number.isFinite(totalRent) && totalRent > 0 ? totalRent : 0;
+  const totalSqFt = members.reduce((sum, m) => {
+    const s = Number(m.roomSizeSqFt);
+    return sum + (Number.isFinite(s) && s > 0 ? s : 0);
+  }, 0);
+  const equalRent = safeRent / members.length;
 
   return members.map((m) => {
-    const weightPercent = totalSqFt > 0 ? ((m.roomSizeSqFt || 0) / totalSqFt) * 100 : 100 / members.length;
-    const weightedRent = (totalRent * weightPercent) / 100;
+    const rawSqFt = Number(m.roomSizeSqFt);
+    const sqFt = Number.isFinite(rawSqFt) && rawSqFt > 0 ? rawSqFt : 0;
+    const weightPercent = totalSqFt > 0 ? (sqFt / totalSqFt) * 100 : 100 / members.length;
+    const weightedRent = (safeRent * weightPercent) / 100;
     const difference = weightedRent - equalRent;
 
     return {
       memberId: m.id,
       name: m.name,
       roomName: m.roomName,
-      roomSizeSqFt: m.roomSizeSqFt,
+      roomSizeSqFt: sqFt,
       weightPercent: Math.round(weightPercent * 10) / 10,
       weightedRent: Math.round(weightedRent),
       equalRent: Math.round(equalRent),

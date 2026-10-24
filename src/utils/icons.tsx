@@ -39,6 +39,10 @@ import {
   Users,
   X,
   Image,
+  FileCheck2,
+  UserCheck2,
+  ShieldAlert,
+  History,
 } from "lucide-react";
 import { AiFillMessage, AiOutlineMail } from "react-icons/ai";
 import { BiSupport } from "react-icons/bi";
@@ -97,6 +101,10 @@ export const Icons = {
   MonitorPlay,
   Copy,
   LayoutDashboard,
+  FileCheck2,
+  UserCheck2,
+  ShieldAlert,
+  History,
   CalendarCheck,
   Users,
   FiAlertTriangle,
