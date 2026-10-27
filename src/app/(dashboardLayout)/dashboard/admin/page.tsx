@@ -28,6 +28,7 @@ import {
   FileText,
   BadgeAlert,
   Check,
+  Loader2,
 } from "lucide-react";
 import {
   getModerationStore,
@@ -41,6 +42,7 @@ import type {
   ModeratedPropertyItem,
   OwnerVerificationSubmission,
   ScamReport,
+  ModerationAuditLog,
 } from "@/types/moderation";
 import {
   Dialog,
@@ -94,6 +96,8 @@ function AdminDashboardContent() {
   const [scamActionType, setScamActionType] = useState<"dismiss" | "confirm_fraud" | "investigate">("dismiss");
 
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [isLoadingApi, setIsLoadingApi] = useState(false);
+  const [isActionPending, setIsActionPending] = useState(false);
 
   // Sync state on events
   useEffect(() => {
@@ -103,6 +107,82 @@ function AdminDashboardContent() {
     window.addEventListener("smartrent_moderation_updated", handleUpdate);
     return () => {
       window.removeEventListener("smartrent_moderation_updated", handleUpdate);
+    };
+  }, []);
+
+  // Fetch real data from MongoDB backend and merge with local store
+  useEffect(() => {
+    let isSubscribed = true;
+    async function syncBackendData() {
+      try {
+        setIsLoadingApi(true);
+        const [verRes, scamRes, logsRes] = await Promise.allSettled([
+          fetch("/api/admin/verifications"),
+          fetch("/api/admin/scam-reports"),
+          fetch("/api/admin/moderation/logs"),
+        ]);
+
+        if (!isSubscribed) return;
+
+        let dbProps: ModeratedPropertyItem[] = [];
+        let dbOwners: OwnerVerificationSubmission[] = [];
+        let dbScams: ScamReport[] = [];
+        let dbLogs: ModerationAuditLog[] = [];
+
+        if (verRes.status === "fulfilled" && verRes.value.ok) {
+          const verData = await verRes.value.json();
+          if (verData.success && verData.data) {
+            dbProps = verData.data.properties || [];
+            dbOwners = verData.data.owners || [];
+          }
+        }
+
+        if (scamRes.status === "fulfilled" && scamRes.value.ok) {
+          const scamData = await scamRes.value.json();
+          if (scamData.success && scamData.data) {
+            dbScams = scamData.data.reports || [];
+          }
+        }
+
+        if (logsRes.status === "fulfilled" && logsRes.value.ok) {
+          const logsData = await logsRes.value.json();
+          if (logsData.success && logsData.data) {
+            dbLogs = logsData.data.logs || [];
+          }
+        }
+
+        if (dbProps.length > 0 || dbOwners.length > 0 || dbScams.length > 0 || dbLogs.length > 0) {
+          setStore((prevStore) => {
+            const propMap = new Map(prevStore.properties.map((p) => [p.id, p]));
+            dbProps.forEach((p) => propMap.set(p.id, p));
+
+            const ownerMap = new Map(prevStore.ownerVerifications.map((o) => [o.id, o]));
+            dbOwners.forEach((o) => ownerMap.set(o.id, o));
+
+            const scamMap = new Map(prevStore.scamReports.map((s) => [s.id, s]));
+            dbScams.forEach((s) => scamMap.set(s.id, s));
+
+            const logMap = new Map(prevStore.auditLogs.map((l) => [l.id, l]));
+            dbLogs.forEach((l) => logMap.set(l.id, l));
+
+            return {
+              properties: Array.from(propMap.values()),
+              ownerVerifications: Array.from(ownerMap.values()),
+              scamReports: Array.from(scamMap.values()),
+              auditLogs: Array.from(logMap.values()),
+            };
+          });
+        }
+      } catch (err) {
+        console.error("[Admin Sync Error]:", err);
+      } finally {
+        if (isSubscribed) setIsLoadingApi(false);
+      }
+    }
+
+    syncBackendData();
+    return () => {
+      isSubscribed = false;
     };
   }, []);
 
@@ -144,7 +224,129 @@ function AdminDashboardContent() {
   ).length;
   const suppressedCount = store.properties.filter((p) => p.isHiddenFromSearch).length;
 
-  // Handlers
+  // Handlers connected to backend APIs
+  const handleApproveListing = async (id: string, title: string) => {
+    setIsActionPending(true);
+    try {
+      const res = await fetch(`/api/admin/verifications/properties/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          decision: "approve",
+          notes: "Listing passed safety, photo, and rate inspection. Verified trust badge awarded.",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to approve listing on server.");
+        setIsActionPending(false);
+        return;
+      }
+    } catch {
+      // Offline/demo fallback
+    }
+
+    verifyListing(id, "approve", "Listing passed safety, photo, and rate inspection. Verified trust badge awarded.");
+    toast.success(`Listing "${title}" approved and verified! Now publicly visible.`);
+    setIsActionPending(false);
+  };
+
+  const handleConfirmRejectListing = async () => {
+    if (!rejectingListing) return;
+    setIsActionPending(true);
+    const notes = rejectionNotes.trim() || "Listing does not meet quality or safety guidelines. Please update room photos and details.";
+
+    try {
+      const res = await fetch(`/api/admin/verifications/properties/${rejectingListing.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision: "reject", notes }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to reject listing on server.");
+        setIsActionPending(false);
+        return;
+      }
+    } catch {
+      // Offline/demo fallback
+    }
+
+    verifyListing(rejectingListing.id, "reject", notes);
+    toast.error(`Listing "${rejectingListing.title}" rejected. Feedback sent to landlord.`);
+    setRejectingListing(null);
+    setRejectionPreset("");
+    setRejectionNotes("");
+    setIsActionPending(false);
+  };
+
+  const handleOwnerDecision = async (decision: "approve" | "reject") => {
+    if (!reviewingOwner) return;
+    setIsActionPending(true);
+    const notes = ownerDecisionNotes.trim() || (decision === "approve" ? "Govt NID verified against Election Commission database." : "Documents failed authentication check.");
+
+    try {
+      const res = await fetch(`/api/admin/verifications/owners/${reviewingOwner.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision, notes }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to update owner verification on server.");
+        setIsActionPending(false);
+        return;
+      }
+    } catch {
+      // Offline/demo fallback
+    }
+
+    verifyOwnerNid(reviewingOwner.id, decision, notes);
+    if (decision === "approve") {
+      toast.success(`Owner ${reviewingOwner.ownerName}'s NID verified successfully! All their listings now show verified landlord badge.`);
+    } else {
+      toast.error(`Owner ${reviewingOwner.ownerName}'s NID rejected.`);
+    }
+    setReviewingOwner(null);
+    setOwnerDecisionNotes("");
+    setIsActionPending(false);
+  };
+
+  const handleConfirmScamAction = async () => {
+    if (!reviewingScam) return;
+    setIsActionPending(true);
+    const notes = scamActionNotes.trim() || (scamActionType === "dismiss" ? "Report reviewed and found compliant. Listing restored." : "Fraud confirmed by moderation team. Listing removed permanently.");
+
+    try {
+      const res = await fetch(`/api/admin/scam-reports/${reviewingScam.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: scamActionType, notes }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to process scam report on server.");
+        setIsActionPending(false);
+        return;
+      }
+    } catch {
+      // Offline/demo fallback
+    }
+
+    moderateScamReport(reviewingScam.id, scamActionType, notes);
+    if (scamActionType === "dismiss") {
+      toast.success(`Report dismissed. Listing "${reviewingScam.propertyTitle}" restored to public search.`);
+    } else if (scamActionType === "confirm_fraud") {
+      toast.error(`Confirmed fraud: Listing "${reviewingScam.propertyTitle}" permanently de-listed.`);
+    } else {
+      toast.info(`Marked for on-site inspection.`);
+    }
+    setReviewingScam(null);
+    setScamActionNotes("");
+    setIsActionPending(false);
+  };
+
+  /* old */ /*
   const handleApproveListing = (id: string, title: string) => {
     verifyListing(id, "approve", "Listing passed safety, photo, and rate inspection. Verified trust badge awarded.");
     toast.success(`Listing "${title}" approved and verified! Now publicly visible.`);
@@ -188,6 +390,7 @@ function AdminDashboardContent() {
     setScamActionNotes("");
   };
 
+  */
   const handleResetData = () => {
     resetModerationStore();
     setStore(getModerationStore());
@@ -233,6 +436,12 @@ function AdminDashboardContent() {
               <span>Admin Moderation Console</span>
             </span>
             <span className="text-xs text-muted-foreground">• Track C3: Features 3 & 8 ({reduxUser?.firstName ? `${reduxUser.firstName} Session` : "Demo Staff Session"})</span>
+            {isLoadingApi && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground animate-pulse">
+                <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                <span>Syncing live records...</span>
+              </span>
+            )}
           </div>
           <h1 className="text-xl sm:text-2xl font-bold font-heading text-foreground tracking-tight">
             Administrator Verification & Safety Portal
@@ -1029,6 +1238,7 @@ function AdminDashboardContent() {
             </button>
             <button
               type="button"
+              disabled={isActionPending}
               onClick={handleConfirmRejectListing}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xs transition-colors shadow-2xs cursor-pointer"
             >
@@ -1174,6 +1384,7 @@ function AdminDashboardContent() {
           <DialogFooter className="p-4 sm:p-5 border-t border-border bg-card shrink-0 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
             <button
               type="button"
+              disabled={isActionPending}
               onClick={() => handleOwnerDecision("reject")}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 rounded-xs transition-colors cursor-pointer"
             >
@@ -1191,6 +1402,7 @@ function AdminDashboardContent() {
               </button>
               <button
                 type="button"
+                disabled={isActionPending}
                 onClick={() => handleOwnerDecision("approve")}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold bg-primary hover:bg-primary-dark text-primary-foreground rounded-xs transition-colors shadow-2xs cursor-pointer"
               >
@@ -1289,6 +1501,7 @@ function AdminDashboardContent() {
             </button>
             <button
               type="button"
+              disabled={isActionPending}
               onClick={handleConfirmScamAction}
               className={`w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xs transition-colors shadow-2xs cursor-pointer ${
                 scamActionType === "dismiss"

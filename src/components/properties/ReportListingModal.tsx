@@ -44,12 +44,44 @@ export function ReportListingModal({
   const [details, setDetails] = useState("");
   const [contactInfo, setContactInfo] = useState("");
   const [submittedReportId, setSubmittedReportId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+
+    let reportRefId = "";
+
+    try {
+      const res = await fetch(`/api/properties/${property.id}/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reason: selectedReason,
+          details,
+          contactInfo,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        reportRefId = data.data?.reportId || "";
+        toast.warning(data.message || "Report logged. Listing hidden from search results while under review.");
+      } else if (res.status === 409) {
+        toast.info(data.error || "You have already reported this listing.");
+        setIsSubmitting(false);
+        return;
+      } else if (res.status === 401) {
+        toast.error("Please sign in to report a listing.");
+        setIsSubmitting(false);
+        return;
+      }
+    } catch {
+      // In offline/prototype mode, fallback gracefully to client store
+    }
 
     // Call unified property moderation store (Track C3 Rule 8: Immediately hides listing from search)
-    const report = submitScamReport({
+    const localReport = submitScamReport({
       propertyId: property.id,
       propertyTitle: property.title,
       propertyLocation: `${property.location.neighborhood}, ${property.location.city}`,
@@ -59,8 +91,8 @@ export function ReportListingModal({
       reportedBy: "Student Tenant",
     });
 
-    setSubmittedReportId(report.id);
-    toast.warning("Report logged. Listing has been hidden from search results while under review.");
+    setSubmittedReportId(reportRefId || localReport.id);
+    setIsSubmitting(false);
   };
 
   const handleResetAndClose = () => {
@@ -99,35 +131,19 @@ export function ReportListingModal({
                     {submittedReportId}
                   </code>.
                 </p>
+                <div className="flex items-center gap-2 pt-2 text-[11px] text-muted-foreground border-t border-border/40">
+                  <EyeOff className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <span>Listing has been immediately suppressed from public search results during review.</span>
+                </div>
               </div>
 
-              {/* Automatic Suppression Notice (Track C3 Rule 8) */}
-              <div className="p-3.5 rounded-xs bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs space-y-1">
-                <strong className="font-semibold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
-                  <EyeOff className="w-3.5 h-3.5" />
-                  <span>Listing Temporarily Hidden From Public Search</span>
-                </strong>
-                <p className="leading-relaxed text-[11px]">
-                  In accordance with Track C3 safety requirements, this listing has been automatically hidden from student search results while the safety desk investigates.
-                </p>
-              </div>
-
-              <div className="rounded-xs border border-border bg-background p-3.5 text-xs text-muted-foreground space-y-1.5">
-                <p className="font-semibold text-foreground">Immediate Scam Alert Desk:</p>
-                <p className="leading-relaxed">
-                  If someone solicited illegal fees or engaged in impersonation fraud, please email us directly at{" "}
-                  <strong className="text-foreground">safety@smartrentbd.com</strong> or call our safety desk at{" "}
-                  <strong className="text-foreground">+880 1700-000000</strong>.
-                </p>
-              </div>
-
-              <div className="pt-2 flex justify-end">
+              <div className="flex justify-end pt-2">
                 <button
                   type="button"
                   onClick={handleResetAndClose}
-                  className="px-4 py-2 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shadow-2xs cursor-pointer"
                 >
-                  Close
+                  Done
                 </button>
               </div>
             </div>
@@ -135,26 +151,26 @@ export function ReportListingModal({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  Reason for reporting *
+                  Reason for Reporting <span className="text-destructive">*</span>
                 </label>
                 <AppSelect
                   value={selectedReason}
                   onValueChange={setSelectedReason}
                   options={REPORT_OPTIONS}
-                  triggerClassName="h-10 text-xs"
+                  className="w-full"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  Describe what happened (Optional)
+                  Specific Details / Description (Optional)
                 </label>
                 <textarea
-                  rows={3}
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
-                  placeholder="Provide any additional context or proof (e.g. asked for bKash token)..."
-                  className="w-full p-2.5 text-xs rounded-xs border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                  placeholder="Explain what happened (e.g. host asked for ৳ 2,000 via bKash before visit, or address was incorrect)..."
+                  rows={4}
+                  className="w-full p-3 text-xs rounded-xs border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                 />
               </div>
 
@@ -188,10 +204,11 @@ export function ReportListingModal({
                 </button>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-destructive hover:bg-destructive/90 rounded-xs transition-colors shadow-2xs cursor-pointer"
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-destructive hover:bg-destructive/90 rounded-xs transition-colors shadow-2xs cursor-pointer disabled:opacity-60"
                 >
                   <Flag className="w-3.5 h-3.5" />
-                  <span>Submit Safety Report</span>
+                  <span>{isSubmitting ? "Submitting Report..." : "Submit Safety Report"}</span>
                 </button>
               </div>
             </form>

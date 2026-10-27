@@ -43,6 +43,8 @@ export interface IPropertyDocument extends Document {
   isVerified: boolean;
   status: ListingModerationStatus;
   moderationNotes?: string;
+  reviewedAt?: Date;
+  reviewedBy?: mongoose.Types.ObjectId;
   isHiddenFromSearch: boolean;
   featuredImage: string;
   images: string[];
@@ -164,6 +166,8 @@ const PropertySchema = new Schema<IPropertyDocument>(
       index: true,
     },
     moderationNotes: { type: String },
+    reviewedAt: { type: Date },
+    reviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
     isHiddenFromSearch: {
       type: Boolean,
       default: false,

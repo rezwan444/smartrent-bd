@@ -9,7 +9,7 @@
     "check": "pnpm lint && pnpm build",
     "lcheck": "pnpm lint",
     "lint": "eslint --max-warnings=0",
-    "test": "node --test src/lib/expenseSettlement.test.ts src/lib/propertyModeration.test.ts src/lib/navigationRoleSeparation.test.ts src/lib/propertyReview.test.ts src/lib/backendAuth.test.ts src/lib/propertyBackend.test.ts",
+    "test": "node --test src/lib/expenseSettlement.test.ts src/lib/propertyModeration.test.ts src/lib/navigationRoleSeparation.test.ts src/lib/propertyReview.test.ts src/lib/backendAuth.test.ts src/lib/propertyBackend.test.ts src/lib/propertyModerationBackend.test.ts",
     "seed:admin": "node --env-file=.env scripts/seed-admin.mjs",
     "seed:users": "node --env-file=.env scripts/seed-all-users.mjs"
   },

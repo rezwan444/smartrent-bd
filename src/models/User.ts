@@ -10,6 +10,14 @@ export interface IUserDocument extends Document {
   role: UserRole;
   isVerified: boolean;
   nidVerified: boolean;
+  nidNumber?: string;
+  holdingTaxNumber?: string;
+  nidPropertyLocation?: string;
+  nidStatus?: "unverified" | "pending" | "verified" | "rejected";
+  nidSubmittedAt?: Date;
+  nidReviewedAt?: Date;
+  nidReviewedBy?: mongoose.Types.ObjectId;
+  nidAdminNotes?: string;
   avatar?: string;
   location?: string;
   isDemoUser: boolean;
@@ -62,6 +70,19 @@ const UserSchema = new Schema<IUserDocument>(
       type: Boolean,
       default: false,
     },
+    nidNumber: { type: String, trim: true },
+    holdingTaxNumber: { type: String, trim: true },
+    nidPropertyLocation: { type: String, trim: true },
+    nidStatus: {
+      type: String,
+      enum: ["unverified", "pending", "verified", "rejected"],
+      default: "unverified",
+      index: true,
+    },
+    nidSubmittedAt: { type: Date },
+    nidReviewedAt: { type: Date },
+    nidReviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    nidAdminNotes: { type: String, trim: true },
     nidVerified: {
       type: Boolean,
       default: false,
