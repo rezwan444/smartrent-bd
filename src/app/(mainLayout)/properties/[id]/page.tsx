@@ -1,11 +1,35 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import mongoose from "mongoose";
 import { PropertyDetailsClient } from "@/components/properties/PropertyDetailsClient";
 import { getPropertyById, getAllPropertyIds } from "@/data/mockProperties";
+import { connectToDatabase } from "@/lib/mongodb";
+import { Property, formatPropertyForPublic } from "@/models/Property";
+import type { IProperty } from "@/types/property";
 import { Home, Search, AlertCircle } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+async function resolveProperty(id: string): Promise<IProperty | null> {
+  try {
+    await connectToDatabase();
+    const orConditions: Array<Record<string, unknown>> = [
+      { customId: id },
+      { slug: id },
+    ];
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      orConditions.push({ _id: id });
+    }
+    const dbProp = await Property.findOne({ $or: orConditions }).lean();
+    if (dbProp && !dbProp.isHiddenFromSearch && dbProp.status !== "rejected") {
+      return formatPropertyForPublic(dbProp) as unknown as IProperty;
+    }
+  } catch {
+    // Database connection or query failed; fall through to mock registry
+  }
+  return getPropertyById(id) || null;
 }
 
 export async function generateStaticParams() {
@@ -17,7 +41,7 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const property = getPropertyById(id);
+  const property = await resolveProperty(id);
 
   if (!property) {
     return {
@@ -49,7 +73,7 @@ export async function generateMetadata({
 
 export default async function PropertyPage({ params }: PageProps) {
   const { id } = await params;
-  const property = getPropertyById(id);
+  const property = await resolveProperty(id);
 
   if (!property) {
     return (

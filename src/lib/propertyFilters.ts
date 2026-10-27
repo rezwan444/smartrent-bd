@@ -1,9 +1,9 @@
-import {
+import type {
   IProperty,
   PropertyFacility,
   PropertyFilterCriteria,
   PropertySortOption,
-} from "@/types/property";
+} from "../types/property.ts";
 
 interface BilingualTerm {
   canonical: string;

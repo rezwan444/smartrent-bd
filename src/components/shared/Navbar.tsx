@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { WEBSITE_DETAILS } from "@/lib/constants";
+import { useAppSelector } from "@/redux/hook";
+import Cookies from "js-cookie";
 
 export interface NavbarProps {
   onFindPlaceClick?: () => void;
@@ -16,6 +18,8 @@ export function Navbar({ onFindPlaceClick }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const isHomePage = pathname === "/" || pathname === "";
+  const reduxUser = useAppSelector((state) => state.auth.user);
+  const isAuthSession = Boolean(reduxUser || (typeof window !== "undefined" && Cookies.get("userRole")));
 
   useEffect(() => {
     const handleScroll = () => {
@@ -143,19 +147,30 @@ export function Navbar({ onFindPlaceClick }: NavbarProps) {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-2.5">
-            <Link
-              href="/login"
-              className="px-3.5 py-2 text-xs lg:text-sm font-medium text-foreground hover:text-primary transition-colors rounded-xs"
-            >
-              Sign In
-            </Link>
+            {isAuthSession ? (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center px-4 py-2 text-xs lg:text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shadow-2xs"
+              >
+                Dashboard {reduxUser?.firstName ? `(${reduxUser.firstName})` : ""}
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-3.5 py-2 text-xs lg:text-sm font-medium text-foreground hover:text-primary transition-colors rounded-xs"
+                >
+                  Sign In
+                </Link>
 
-            <Link
-              href="/register"
-              className="inline-flex items-center justify-center px-4 py-2 text-xs lg:text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shadow-2xs"
-            >
-              Create Account
-            </Link>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center px-4 py-2 text-xs lg:text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shadow-2xs"
+                >
+                  Create Account
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Hamburger Button */}

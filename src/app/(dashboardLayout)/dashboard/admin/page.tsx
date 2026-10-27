@@ -52,6 +52,7 @@ import {
 } from "@/components/ui/dialog";
 import { AppConfirmDialog } from "@/components/shared/AppConfirmDialog";
 import { AppSelect, AppSelectOption } from "@/components/shared/AppSelect";
+import Cookies from "js-cookie";
 
 function AdminDashboardContent() {
   const reduxUser = useAppSelector((state) => state.auth.user);
@@ -59,6 +60,14 @@ function AdminDashboardContent() {
   // Store state synced with localStorage and event listener
   const [store, setStore] = useState<ModerationStore>(() => getModerationStore());
   const router = useRouter();
+
+  // Guard: enforce admin/staff role separation
+  useEffect(() => {
+    const role = (reduxUser?.role as string)?.toUpperCase() || Cookies.get("userRole")?.toUpperCase();
+    if (role && role !== "ADMIN" && role !== "SUPER_ADMIN" && role !== "STAFF") {
+      router.replace("/dashboard/unauthorized");
+    }
+  }, [reduxUser, router]);
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
 

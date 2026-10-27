@@ -61,7 +61,12 @@ export function Header({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Ignore network errors on logout
+    }
     // logout();
     dispatch(logout());
     router.replace("/login");
@@ -173,95 +178,96 @@ export function Header({
             </span>
           </div>
         </div>
-
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setShowDropdown(!showDropdown)}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors duration-300 hover:cursor-pointer"
+            className="flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-2 rounded-xl transition-all duration-200 hover:bg-muted/70 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             aria-label="User menu"
+            aria-expanded={showDropdown}
           >
-            {user?.profilePictureUrl ? (
-              <Image
-                width={200}
-                height={200}
-                src={user?.profilePictureUrl || WEBSITE_DETAILS.AVATAR2}
-                alt="profile"
-                draggable={false}
-                className="w-8 h-8 rounded-full object-cover"
-              />
-            ) : (
-              <Image
-                width={200}
-                height={200}
-                src={WEBSITE_DETAILS.AVATAR2}
-                alt="profile"
-                draggable={false}
-                className="w-8 h-8 rounded-full object-cover"
-              />
-            )}
-
-            {/* <div className="hidden sm:block text-left">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {`${user?.firstName ?? "N/A"} ${user?.lastName ?? ""}`}
+            <div className="w-8 h-8 rounded-full overflow-hidden border border-border shadow-2xs shrink-0 bg-muted flex items-center justify-center">
+              {user?.profilePictureUrl ? (
+                <Image
+                  width={64}
+                  height={64}
+                  src={user.profilePictureUrl}
+                  alt="profile"
+                  draggable={false}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-xs font-semibold text-primary">
+                  {user?.firstName?.[0] || "U"}
+                </span>
+              )}
+            </div>
+            <div className="hidden sm:block text-left leading-tight">
+              <p className="text-xs font-semibold text-foreground truncate max-w-[120px]">
+                {user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Account"}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                {user?.role ?? "N/A"}
+              <p className="text-[10px] text-muted-foreground capitalize truncate">
+                {String(user?.role || activeRole).toLowerCase()}
               </p>
-            </div> */}
+            </div>
+            <Icons.ChevronDownIcon
+              className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 hidden sm:block ${
+                showDropdown ? "rotate-180" : ""
+              }`}
+            />
           </button>
 
           {showDropdown && (
-            <div className="absolute right-0 mt-2 w-48 bg-primary  border text-foreground rounded-lg shadow-lg overflow-hidden">
-              <div className="p-4 border-b  ">
-                <p className="text-sm font-medium ">
-                  {`${user?.firstName ?? "Mr. "} ${user?.lastName ?? "Demo"}`}
+            <div className="absolute right-0 mt-2 w-56 bg-card text-card-foreground border border-border rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150">
+              <div className="p-3.5 border-b border-border bg-muted/30">
+                <p className="text-xs font-semibold text-foreground truncate">
+                  {user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Demo User"}
                 </p>
-                <p className="text-xs text-gray-500 ">{user?.email}</p>
+                <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                  {user?.email || "user@smartrentbd.com"}
+                </p>
+                <div className="mt-2">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-primary/10 text-primary border border-primary/20">
+                    {user?.role || activeRole}
+                  </span>
+                </div>
               </div>
 
-              <div className="p-2 space-y-1">
-                {user?.role === IRole.SUPER_ADMIN ? (
+              <div className="p-1.5 space-y-0.5">
+                <button
+                  onClick={() => {
+                    router.push(dashboardHomeHref);
+                    setShowDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                >
+                  <Icons.LayoutDashboard className="w-4 h-4 text-muted-foreground" />
+                  Dashboard Overview
+                </button>
+
+                {user?.role === IRole.SUPER_ADMIN && (
                   <button
                     onClick={() => {
                       router.push("/dashboard/admin/system-settings");
                       setShowDropdown(false);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-muted-foreground dark:hover:bg-slate-800 transition-colors hover:cursor-pointer"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                   >
-                    <Icons.Settings className="w-4 h-4" />
-                    Settings
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      router.push(dashboardHomeHref);
-                      setShowDropdown(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm  hover:bg-foreground/10  transition-colors hover:cursor-pointer"
-                  >
-                    <Icons.LayoutDashboard className="w-4 h-4" />
-                    Dashboard
+                    <Icons.Settings className="w-4 h-4 text-muted-foreground" />
+                    System Settings
                   </button>
                 )}
-                {/* <button
-                  onClick={() => {
-                    router.push("/dashboard/admin/settings");
-                    setShowDropdown(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors hover:cursor-pointer"
-                >
-                  <Icons.CiSettings className="w-5 h-5 text-sm font-medium" />
-                  Settings
-                </button> */}
               </div>
 
-              <div className="p-2 border-t ">
+              <div className="p-1.5 border-t border-border">
                 <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-600  hover:bg-destructive/20  transition-colors hover:cursor-pointer"
+                  onClick={() => {
+                    setShowDropdown(false);
+                    handleLogout();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                 >
-                  <Icons.LogOut className="w-4 h-4" />
-                  Logout
+                  <Icons.LogOut className="w-4 h-4 text-destructive" />
+                  Sign Out
                 </button>
               </div>
             </div>

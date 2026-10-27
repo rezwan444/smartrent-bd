@@ -1,16 +1,22 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { logout } from "@/redux/features/user/authSlice";
 import { useAppDispatch } from "@/redux/hook";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner"; // Make sure 'sonner' is installed
+import { toast } from "sonner";
 import { Icons } from "../../utils/icons";
 
 export function LogoutButton({ isCollapsed }: { isCollapsed: boolean }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  // handle logout
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (err) {
+      console.error("[Sidebar Logout Error]:", err);
+    }
     dispatch(logout());
     router.replace("/login");
     router.refresh();
@@ -18,7 +24,7 @@ export function LogoutButton({ isCollapsed }: { isCollapsed: boolean }) {
   };
 
   return (
-    <div className="">
+    <div>
       <Button
         onClick={handleLogout}
         variant="outline"

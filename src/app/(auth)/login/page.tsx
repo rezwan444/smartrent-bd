@@ -123,29 +123,99 @@ function LoginFormContent() {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmittingForm(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    setIsSubmittingForm(false);
-
-    const validUser = validateCredentials(data.email, data.password);
-    if (!validUser) {
-      setError("password", {
-        message: "Invalid email or password. Use demo shortcuts (Student or Owner).",
-      });
-      toast.error(
-        "Invalid credentials! Please use valid demo credentials (Student Demo or Owner Demo)."
-      );
-      return;
-    }
-
     clearErrors();
-    completeDemoLogin(validUser);
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success && result.data) {
+        const { user: authUser, accessToken, isDemoSession } = result.data;
+
+        let userRole: IRole = IRole.STUDENT;
+        let dashboardPath = "/dashboard/student";
+
+        if (
+          authUser.role === "ADMIN" ||
+          authUser.role === "SUPER_ADMIN" ||
+          authUser.role === "STAFF"
+        ) {
+          userRole = IRole.ADMIN;
+          dashboardPath = "/dashboard/admin";
+        } else if (authUser.role === "OWNER") {
+          userRole = IRole.OWNER;
+          dashboardPath = "/dashboard/owner";
+        }
+
+        dispatch(
+          setUser({
+            id: authUser._id || authUser.id,
+            email: authUser.email,
+            firstName: authUser.fullName?.split(" ")[0] || "User",
+            lastName: authUser.fullName?.split(" ").slice(1).join(" ") || "",
+            phone: authUser.phone || "+880 1700-000000",
+            location: authUser.location || "Dhaka, Bangladesh",
+            profilePictureUrl: authUser.avatar || null,
+            role: userRole,
+            status: IAllStatusEnum.ACTIVE,
+            twoFactor: false,
+            createdAt: String(authUser.createdAt || new Date().toISOString()),
+            updatedAt: String(authUser.updatedAt || new Date().toISOString()),
+          })
+        );
+
+        dispatch(setTokens({ accessToken }));
+        Cookies.set("userRole", userRole.toString());
+
+        if (isDemoSession) {
+          toast.info(`Signed in as ${authUser.fullName} (Demo Profile)`);
+        } else {
+          toast.success(`Welcome back, ${authUser.fullName}!`);
+        }
+
+        const destination =
+          redirectTarget &&
+          redirectTarget !== "/" &&
+          redirectTarget !== "/login" &&
+          redirectTarget !== "/register"
+            ? redirectTarget
+            : dashboardPath;
+
+        router.replace(destination);
+        return;
+      }
+
+      setError("password", {
+        message: result.error || "Invalid email or password.",
+      });
+      toast.error(result.error || "Invalid credentials!");
+    } catch {
+      // Offline fallback to demo credentials if API network request fails
+      const validUser = validateCredentials(data.email, data.password);
+      if (!validUser) {
+        setError("password", {
+          message: "Invalid email or password. Use demo shortcuts (Student or Owner).",
+        });
+        toast.error(
+          "Invalid credentials! Please use valid demo credentials (Student Demo or Owner Demo)."
+        );
+        return;
+      }
+
+      clearErrors();
+      completeDemoLogin(validUser);
+    } finally {
+      setIsSubmittingForm(false);
+    }
   };
 
   const handleGoogleSignIn = () => {
-    toast.info(
-      "Google Sign-In is not configured in this prototype. Please use demo credentials (Student / Owner) to sign in.",
-      { duration: 4000 }
-    );
+    router.push("/api/auth/google");
   };
 
   const handleQuickFill = (role: "student" | "owner" | "admin") => {

@@ -1,4 +1,4 @@
-import { IRole } from "@/types/global";
+import { IRole } from "../types/global.ts";
 
 export interface User {
   id: string;

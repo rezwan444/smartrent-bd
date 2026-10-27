@@ -43,10 +43,25 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = async (data: ForgotFormData) => {
     setIsSubmittingForm(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setIsSubmittingForm(false);
-    setSubmittedEmail(data.email);
-    toast.info("Password reset simulated (Demo Preview)");
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
+      });
+      const result = await res.json();
+      setSubmittedEmail(data.email);
+      if (res.ok && result.success) {
+        toast.success(result.message || "Reset instructions generated.");
+      } else {
+        toast.info(result.error || "Recovery request submitted.");
+      }
+    } catch {
+      setSubmittedEmail(data.email);
+      toast.info("Password reset request submitted (Demo fallback).");
+    } finally {
+      setIsSubmittingForm(false);
+    }
   };
 
   const handleReset = () => {

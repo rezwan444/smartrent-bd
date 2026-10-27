@@ -47,6 +47,12 @@ export default function ResetPasswordPage() {
   const emailFromStore = useAppSelector(selectEmail);
 
   const router = useRouter();
+  const [queryToken] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("token");
+    }
+    return null;
+  });
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -65,49 +71,49 @@ export default function ResetPasswordPage() {
       confirmPassword: "",
     },
   });
-
   const onSubmit = async (data: ResetPasswordFormData) => {
+    const effectiveToken = queryToken || token;
+    if (!effectiveToken) {
+      toast.error("Reset token is missing. Please use the password recovery link.");
+      return;
+    }
+
     try {
-      // Simulate API call
-
-      if (emailFromStore && token) {
-        const result = await resetPassword({
-          newPassword: data.confirmPassword,
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: effectiveToken,
+          newPassword: data.newPassword,
           confirmPassword: data.confirmPassword,
-          token: token,
-        }).unwrap();
-        console.log(result);
+        }),
+      });
 
-        if (result?.success) {
-          toast.success(result?.message);
-          // Clear form after success
-          reset();
-
-          //   remove stored accessToken -> user have to login now
-          dispatch(clearResetPassToken());
-
-          // Show success message
-          setSuccessMessage("Password reset successfully. Please login again!");
-          // Clear success message after 3 seconds
-          setTimeout(() => {
-            setSuccessMessage("");
-          }, 3000);
-          router.push("/reset-success");
-        }
+      const result = await res.json();
+      if (res.ok && result.success) {
+        toast.success(result.message || "Password reset successfully!");
+        reset();
+        dispatch(clearResetPassToken());
+        router.push("/reset-success");
+      } else {
+        toast.error(result.error || "Password reset failed.");
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      const errMsg =
-        error?.message || error?.data?.message || "Something went wrong";
-      toast.error(errMsg);
-      //   toast.error("Password reset failed!");
-      //   console.error("Password reset failed:", error);
+    } catch {
+      toast.error("An unexpected error occurred while resetting password.");
     }
   };
-  //   if email not found in store redirect to login page
+
   useEffect(() => {
-    if (!emailFromStore) return router.replace("/login");
-  }, [router, emailFromStore]);
+    if (!emailFromStore && !token && !queryToken) {
+      // Allow user 1 second to parse URL query token before redirecting
+      const timeout = setTimeout(() => {
+        if (!queryToken) {
+          router.replace("/login");
+        }
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [router, emailFromStore, token, queryToken]);
 
   return (
     <div className="min-h-screen bg-background text-foreground px-4 overflow-y-auto">

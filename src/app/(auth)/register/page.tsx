@@ -108,48 +108,93 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsSubmittingForm(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    setIsSubmittingForm(false);
 
     const isOwner = selectedUserType === "owner";
     const assignedRole = isOwner ? IRole.OWNER : IRole.STUDENT;
     const targetDashboard = isOwner ? "/dashboard/owner" : "/dashboard/student";
 
-    // Save demo user session
-    dispatch(
-      setUser({
-        id: `demo-${selectedUserType}-user`,
-        email: data.email,
-        firstName: data.fullName.split(" ")[0] || "User",
-        lastName:
-          data.fullName.split(" ").slice(1).join(" ") ||
-          `(${isOwner ? "Owner" : "Student"})`,
-        phone: "+880 1700-000000",
-        location: "Dhaka, Bangladesh",
-        profilePictureUrl: null,
-        role: assignedRole,
-        status: IAllStatusEnum.ACTIVE,
-        twoFactor: false,
-        createdAt: "2026-01-01T00:00:00.000Z",
-        updatedAt: "2026-01-01T00:00:00.000Z",
-      })
-    );
-    dispatch(setTokens({ accessToken: `demo-token-${selectedUserType}` }));
-    Cookies.set("userRole", assignedRole.toString());
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: data.fullName,
+          email: data.email,
+          password: data.password,
+          userType: selectedUserType,
+        }),
+      });
 
-    toast.success(
-      `Demo account prepared for ${data.fullName}! Redirecting to ${
-        isOwner ? "Owner" : "Student"
-      } Dashboard...`
-    );
-    router.replace(targetDashboard);
+      const result = await response.json();
+
+      if (response.ok && result.success && result.data) {
+        const { user: authUser, accessToken } = result.data;
+
+        dispatch(
+          setUser({
+            id: authUser._id || authUser.id,
+            email: authUser.email,
+            firstName: authUser.fullName?.split(" ")[0] || "User",
+            lastName: authUser.fullName?.split(" ").slice(1).join(" ") || "",
+            phone: authUser.phone || "+880 1700-000000",
+            location: authUser.location || "Dhaka, Bangladesh",
+            profilePictureUrl: null,
+            role: assignedRole,
+            status: IAllStatusEnum.ACTIVE,
+            twoFactor: false,
+            createdAt: String(authUser.createdAt || new Date().toISOString()),
+            updatedAt: String(authUser.updatedAt || new Date().toISOString()),
+          })
+        );
+        dispatch(setTokens({ accessToken }));
+        Cookies.set("userRole", assignedRole.toString());
+
+        toast.success(
+          `Account registered for ${data.fullName}! Redirecting to ${
+            isOwner ? "Owner" : "Student"
+          } Dashboard...`
+        );
+        router.replace(targetDashboard);
+        return;
+      }
+
+      toast.error(result.error || "Registration failed. Please check your details.");
+    } catch {
+      // Offline demo fallback if API endpoint is unreachable
+      dispatch(
+        setUser({
+          id: `demo-${selectedUserType}-user`,
+          email: data.email,
+          firstName: data.fullName.split(" ")[0] || "User",
+          lastName:
+            data.fullName.split(" ").slice(1).join(" ") ||
+            `(${isOwner ? "Owner" : "Student"})`,
+          phone: "+880 1700-000000",
+          location: "Dhaka, Bangladesh",
+          profilePictureUrl: null,
+          role: assignedRole,
+          status: IAllStatusEnum.ACTIVE,
+          twoFactor: false,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        })
+      );
+      dispatch(setTokens({ accessToken: `demo-token-${selectedUserType}` }));
+      Cookies.set("userRole", assignedRole.toString());
+
+      toast.success(
+        `Demo account prepared for ${data.fullName}! Redirecting to ${
+          isOwner ? "Owner" : "Student"
+        } Dashboard...`
+      );
+      router.replace(targetDashboard);
+    } finally {
+      setIsSubmittingForm(false);
+    }
   };
 
   const handleGoogleSignUp = () => {
-    toast.info(
-      "Google Sign-Up is not configured in this prototype. Please complete the registration form below.",
-      { duration: 4000 }
-    );
+    router.push(`/api/auth/google?role=${selectedUserType}`);
   };
 
   return (

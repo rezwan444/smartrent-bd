@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   MapPin,
+  Star,
   Bed,
   Bath,
   Maximize2,
@@ -32,6 +33,8 @@ import { PropertyOwnerCard } from "./PropertyOwnerCard";
 import { RequestVisitModal } from "./RequestVisitModal";
 import { getModerationStore } from "@/lib/propertyModerationStorage";
 import { ReportListingModal } from "./ReportListingModal";
+import { PropertyReviewsSection } from "./PropertyReviewsSection";
+import { getPropertyRatingSummary, REVIEWS_UPDATED_EVENT } from "@/lib/propertyReviewStorage";
 
 interface PropertyDetailsClientProps {
   property: IProperty;
@@ -75,6 +78,19 @@ const GENDER_LABELS: Record<string, string> = {
 };
 
 export function PropertyDetailsClient({ property }: PropertyDetailsClientProps) {
+  // Rating summary state synced with storage and live events
+  const [ratingSummary, setRatingSummary] = useState(() =>
+    getPropertyRatingSummary(property.id)
+  );
+
+  useEffect(() => {
+    const updateRating = () => {
+      setRatingSummary(getPropertyRatingSummary(property.id));
+    };
+    window.addEventListener(REVIEWS_UPDATED_EVENT, updateRating);
+    return () => window.removeEventListener(REVIEWS_UPDATED_EVENT, updateRating);
+  }, [property.id]);
+
   // Moderation state synced with storage and live events
   const [moderationState, setModerationState] = useState(() => {
     const store = getModerationStore();
@@ -277,6 +293,27 @@ export function PropertyDetailsClient({ property }: PropertyDetailsClientProps) 
               <Calendar className="w-3.5 h-3.5" />
               <span>{property.availability}</span>
             </span>
+
+            {/* Rating Badge */}
+            {ratingSummary.totalReviews > 0 ? (
+              <a
+                href="#reviews"
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xs text-xs font-semibold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-colors"
+                title={`${ratingSummary.averageRating} out of 5 based on ${ratingSummary.totalReviews} verified tenant reviews`}
+              >
+                <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                <span>{ratingSummary.averageRating.toFixed(1)}</span>
+                <span className="text-[11px] text-muted-foreground">({ratingSummary.totalReviews})</span>
+              </a>
+            ) : (
+              <a
+                href="#reviews"
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-background px-2 py-0.5 rounded-xs border border-border hover:text-foreground transition-colors"
+              >
+                <Star className="w-3.5 h-3.5 text-muted-foreground/40" />
+                <span>No reviews yet</span>
+              </a>
+            )}
 
             <span className="text-[11px] font-mono text-muted-foreground ml-auto hidden sm:inline">
               Ref ID: {property.id}
@@ -505,6 +542,9 @@ export function PropertyDetailsClient({ property }: PropertyDetailsClientProps) 
             {/* Location & Transit Section */}
             <PropertyLocationSection property={property} />
 
+            {/* Tenant Ratings & Verified Reviews (Feature 7) */}
+            <PropertyReviewsSection property={property} />
+
             {/* Safety & Anti-Fraud Advisory for Tenants */}
             <div className="rounded-xs border border-border bg-card p-5 flex items-start gap-3 shadow-2xs">
               <ShieldAlert className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
@@ -531,6 +571,15 @@ export function PropertyDetailsClient({ property }: PropertyDetailsClientProps) 
                   </span>
                   <span className="text-xs text-muted-foreground font-medium">/ month</span>
                 </div>
+                {ratingSummary.totalReviews > 0 && (
+                  <div className="flex items-center gap-1.5 text-xs pt-1.5">
+                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                    <span className="font-bold text-foreground">{ratingSummary.averageRating.toFixed(1)}</span>
+                    <a href="#reviews" className="text-muted-foreground hover:underline">
+                      ({ratingSummary.totalReviews} verified review{ratingSummary.totalReviews > 1 ? "s" : ""})
+                    </a>
+                  </div>
+                )}
                 <div className="mt-1 text-xs text-muted-foreground flex flex-col gap-0.5">
                   {property.serviceCharge ? (
                     <span>+ ৳{property.serviceCharge} monthly service charge</span>

@@ -37,11 +37,30 @@ export function HomePageClient() {
   );
 
   useEffect(() => {
+    let isMounted = true;
+
+    async function loadProperties() {
+      try {
+        const res = await fetch("/api/properties?limit=50");
+        if (!res.ok) return;
+        const json = await res.json();
+        if (isMounted && json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setPublicListings(json.data as IProperty[]);
+        }
+      } catch {
+        // Keep initial mock listings if network/database is unavailable
+      }
+    }
+
+    loadProperties();
+
     const handleUpdate = () => {
       setPublicListings(getAllPublicProperties());
+      loadProperties();
     };
     window.addEventListener("smartrent_moderation_updated", handleUpdate);
     return () => {
+      isMounted = false;
       window.removeEventListener("smartrent_moderation_updated", handleUpdate);
     };
   }, []);

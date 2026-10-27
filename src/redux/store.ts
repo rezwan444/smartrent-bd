@@ -52,10 +52,10 @@ export const store = configureStore({
     }).concat(baseApi.middleware),
 });
 
+export const persistor = persistStore(store);
+
 setupListeners(store.dispatch);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export type Store = typeof store;
-
-export const persistor = persistStore(store);
