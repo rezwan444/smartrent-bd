@@ -182,6 +182,8 @@ export function RoommatesClient() {
       if (filters.university !== "all") {
         const uniKey = filters.university;
         const profileUni = profile.university.toLowerCase();
+        if (uniKey === "pub" && !profileUni.includes("pundro") && !profileUni.includes("pundra") && !profileUni.includes("pub")) return false;
+        if (uniKey === "ahc" && !profileUni.includes("azizul")) return false;
         if (uniKey === "du" && !profileUni.includes("dhaka")) return false;
         if (uniKey === "buet" && !profileUni.includes("buet")) return false;
         if (uniKey === "ewu" && !profileUni.includes("east west")) return false;

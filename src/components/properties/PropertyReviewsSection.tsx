@@ -100,7 +100,32 @@ export function PropertyReviewsSection({ property }: PropertyReviewsSectionProps
 
     handleUpdate();
     window.addEventListener(REVIEWS_UPDATED_EVENT, handleUpdate);
-    return () => window.removeEventListener(REVIEWS_UPDATED_EVENT, handleUpdate);
+
+    let ignore = false;
+    async function loadLiveReviews() {
+      try {
+        const res = await fetch(`/api/properties/${property.id}/reviews`);
+        if (res.ok) {
+          const json = await res.json();
+          if (!ignore && json.success && json.data) {
+            if (Array.isArray(json.data.reviews) && json.data.reviews.length > 0) {
+              setReviews(json.data.reviews);
+            }
+            if (json.data.summary && json.data.summary.totalReviews > 0) {
+              setSummary(json.data.summary);
+            }
+          }
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    loadLiveReviews();
+
+    return () => {
+      ignore = true;
+      window.removeEventListener(REVIEWS_UPDATED_EVENT, handleUpdate);
+    };
   }, [property.id, reduxUser]);
 
   const handleSubmitReview = async (e: React.FormEvent) => {
@@ -128,6 +153,24 @@ export function PropertyReviewsSection({ property }: PropertyReviewsSectionProps
     const userName =
       `${reduxUser.firstName || ""} ${reduxUser.lastName || ""}`.trim() ||
       "Verified Student Tenant";
+
+    try {
+      await fetch(`/api/properties/${property.id}/reviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rating,
+          title: title.trim(),
+          comment: comment.trim(),
+          cleanliness,
+          landlordBehavior,
+          safety,
+          facilities,
+        }),
+      });
+    } catch {
+      // Local sync continues
+    }
 
     const result = submitPropertyReview({
       propertyId: property.id,
@@ -230,8 +273,9 @@ export function PropertyReviewsSection({ property }: PropertyReviewsSectionProps
             Rating Distribution
           </span>
           {[5, 4, 3, 2, 1].map((stars) => {
-            const count = summary.distribution[stars as 1 | 2 | 3 | 4 | 5] || 0;
-            const percentage = summary.totalReviews > 0 ? (count / summary.totalReviews) * 100 : 0;
+            const count = summary?.distribution?.[stars as 1 | 2 | 3 | 4 | 5] || 0;
+            const total = summary?.totalReviews || 0;
+            const percentage = total > 0 ? (count / total) * 100 : 0;
             return (
               <div key={stars} className="flex items-center gap-2 text-xs">
                 <span className="w-7 text-muted-foreground font-mono flex items-center gap-0.5 shrink-0">

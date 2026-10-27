@@ -14,10 +14,29 @@ export function AuthInitializer() {
 
     async function loadCurrentUser() {
       try {
+        // Only query /api/auth/me if a session cookie (userRole) is present
+        const hasSessionCookie =
+          typeof document !== "undefined" &&
+          document.cookie.split(";").some((c) => {
+            const [k, v] = c.trim().split("=");
+            return k === "userRole" && Boolean(v);
+          });
+
+        if (!hasSessionCookie) {
+          if (isMounted) {
+            dispatch(setUser(null));
+          }
+          return;
+        }
+
         const res = await fetch("/api/auth/me");
         if (!res.ok) {
           if (isMounted) {
             dispatch(setUser(null));
+          }
+          // Clear stale client userRole cookie if server rejected the session
+          if (typeof document !== "undefined") {
+            document.cookie = "userRole=; path=/; max-age=0;";
           }
           return;
         }

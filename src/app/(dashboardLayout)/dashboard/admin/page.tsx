@@ -29,6 +29,7 @@ import {
   BadgeAlert,
   Check,
   Loader2,
+  Calendar,
 } from "lucide-react";
 import {
   getModerationStore,
@@ -896,6 +897,15 @@ function AdminDashboardContent() {
                         <MapPin className="w-3 h-3 text-primary" />
                         <span>{sub.propertyLocation}</span>
                       </span>
+                      {sub.dob && (
+                        <>
+                          <span>•</span>
+                          <span className="flex items-center gap-1 font-mono text-[11px] bg-secondary/80 px-1.5 py-0.5 rounded-xs">
+                            <Calendar className="w-3 h-3 text-primary" />
+                            <span>DOB: {sub.dob}</span>
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -952,6 +962,7 @@ function AdminDashboardContent() {
                   <p className="text-xs text-muted-foreground bg-secondary/40 p-2 rounded-xs border border-border">
                     <strong className="text-foreground">Moderation Notes:</strong> {sub.adminNotes}
                   </p>
+
                 )}
               </div>
             ))}
@@ -1322,11 +1333,20 @@ function AdminDashboardContent() {
                     <FileCheck2 className="w-4 h-4 text-primary shrink-0" />
                   </div>
                   <p className="text-[11px] font-medium text-muted-foreground pt-1">
-                    National ID Number (NID):
+                    National ID (NID):
                   </p>
                   <p className="font-mono font-bold text-foreground text-xs sm:text-sm tracking-wide">
                     {reviewingOwner?.nidNumber}
                   </p>
+                  <div className="pt-1.5 border-t border-border/40">
+                    <p className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-primary" />
+                      <span>Date of Birth (DOB):</span>
+                    </p>
+                    <p className="font-mono font-bold text-foreground text-xs sm:text-sm tracking-wide">
+                      {reviewingOwner?.dob || "1985-08-15"}
+                    </p>
+                  </div>
                 </div>
                 <p className="text-[10px] text-muted-foreground border-t border-border/40 pt-1.5">
                   Verified against Bangladesh Election Commission database (Simulated).
@@ -1349,6 +1369,7 @@ function AdminDashboardContent() {
                   <p className="font-mono font-bold text-foreground text-xs sm:text-sm tracking-wide">
                     {reviewingOwner?.holdingTaxNumber}
                   </p>
+
                 </div>
                 <div className="border-t border-border/40 pt-1.5 text-[10px] text-muted-foreground flex items-center gap-1 truncate">
                   <MapPin className="w-3 h-3 text-primary shrink-0" />
@@ -1461,6 +1482,7 @@ function AdminDashboardContent() {
                     <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                     <span>Reported Reason: {reviewingScam.reason}</span>
                   </p>
+
                   {reviewingScam.details && (
                     <p className="text-muted-foreground text-xs pl-5">{reviewingScam.details}</p>
                   )}

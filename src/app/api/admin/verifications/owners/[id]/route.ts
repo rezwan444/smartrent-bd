@@ -121,6 +121,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       ownerName: string;
       nidVerified: boolean;
       nidStatus: string;
+      dob?: string;
       reviewedAt: string;
       reviewedBy: string;
     }> = {
@@ -133,6 +134,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         ownerName: owner.fullName,
         nidVerified: owner.nidVerified,
         nidStatus: owner.nidStatus,
+        dob: owner.nidDob || owner.dob || "",
         reviewedAt: now.toISOString(),
         reviewedBy: auth.user.fullName,
       },

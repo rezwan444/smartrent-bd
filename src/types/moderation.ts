@@ -41,6 +41,8 @@ export interface OwnerVerificationSubmission {
   ownerPhone: string;
   ownerEmail?: string;
   nidNumber: string;
+  dob?: string;
+  documentUrl?: string;
   holdingTaxNumber: string;
   propertyLocation: string;
   submittedAt: string;

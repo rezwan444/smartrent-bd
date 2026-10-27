@@ -58,18 +58,51 @@ export function RequestVisitModal({
     slot: string;
   } | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!preferredDate || !contactPhone) return;
 
-    const requestId = `SR-VISIT-${Date.now().toString().slice(-6)}`;
+    const formattedSlot =
+      timeSlot === "morning"
+        ? "Morning (10:00 AM – 1:00 PM)"
+        : timeSlot === "evening"
+        ? "Evening (5:00 PM – 8:00 PM)"
+        : "Afternoon (2:00 PM – 5:00 PM)";
+
+    let createdId = `SR-VISIT-${Date.now().toString().slice(-6)}`;
+
+    try {
+      const res = await fetch(`/api/properties/${property.id}/visit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          preferredDate,
+          timeSlot: formattedSlot,
+          contactPhone,
+          visitorCount,
+          notes,
+          studentName: currentUser
+            ? `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim()
+            : undefined,
+          studentEmail: currentUser?.email,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && data.data?.visitId) {
+        createdId = data.data.visitId;
+      }
+    } catch {
+      // Local fallback
+    }
+
     const newRequest = {
-      id: requestId,
+      id: createdId,
       propertyId: property.id,
       propertyTitle: property.title,
       propertyAddress: property.location.address || property.location.neighborhood,
       preferredDate,
-      timeSlot,
+      timeSlot: formattedSlot,
       contactPhone,
       visitorCount,
       notes,
@@ -77,7 +110,7 @@ export function RequestVisitModal({
       status: "pending_landlord_confirmation",
     };
 
-    // Store honestly in local storage
+    // Store in local storage for instant offline continuity
     if (typeof window !== "undefined") {
       try {
         const stored = localStorage.getItem("smartrent_visit_requests");
@@ -90,14 +123,9 @@ export function RequestVisitModal({
     }
 
     setSubmittedRequest({
-      id: requestId,
+      id: createdId,
       date: preferredDate,
-      slot:
-        timeSlot === "morning"
-          ? "10:00 AM – 1:00 PM"
-          : timeSlot === "evening"
-          ? "5:00 PM – 8:00 PM"
-          : "2:00 PM – 5:00 PM",
+      slot: formattedSlot,
     });
   };
 

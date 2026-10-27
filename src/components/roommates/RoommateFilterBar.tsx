@@ -50,7 +50,7 @@ export function RoommateFilterBar({
           <Input
             value={filters.searchQuery}
             onChange={(e) => updateFilter("searchQuery", e.target.value)}
-            placeholder="Search by student name, university, department, or zone (e.g. DU, Nilkhet, CSE)..."
+            placeholder="Search by student name, university, department, or zone (e.g. PUB, Bogura, DU, Nilkhet)..."
             className="pl-10 h-10 text-xs sm:text-sm rounded-xs bg-background border-border"
           />
         </div>
@@ -116,6 +116,8 @@ export function RoommateFilterBar({
             onValueChange={(val) => updateFilter("university", val)}
             options={[
               { value: "all", label: "All Universities" },
+              { value: "pub", label: "Pundro University of Science & Technology (PUB), Bogura" },
+              { value: "ahc", label: "Govt. Azizul Haque College (Bogura)" },
               { value: "du", label: "University of Dhaka (DU)" },
               { value: "buet", label: "BUET" },
               { value: "ewu", label: "East West Univ (EWU)" },
@@ -123,7 +125,6 @@ export function RoommateFilterBar({
               { value: "brac", label: "Brac University" },
               { value: "dmc", label: "Dhaka Medical (DMC)" },
               { value: "iub", label: "IUB" },
-              { value: "ahc", label: "Azizul Haque College (Bogura)" },
             ]}
             triggerClassName="h-9 text-xs"
           />

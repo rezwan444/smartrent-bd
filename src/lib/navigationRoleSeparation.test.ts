@@ -45,7 +45,11 @@ describe("Dashboard Navigation & Role Separation", () => {
     const ownerHrefs = ownerItems.map((item) => item.href);
 
     assert.ok(ownerHrefs.includes("/dashboard/owner"), "Owner dashboard must be present");
-    assert.equal(ownerItems.length, 1, "Owner navigation contains only owner portal");
+    assert.ok(ownerItems.length >= 1, "Owner navigation contains owner portal sections");
+    assert.ok(
+      ownerHrefs.every((h) => h.startsWith("/dashboard/owner")),
+      "All owner items must strictly belong to owner portal"
+    );
     assert.ok(!ownerHrefs.includes("/dashboard/admin"), "Admin portal must not appear in owner sidebar");
   });
 });

@@ -11,6 +11,8 @@ export interface IUserDocument extends Document {
   isVerified: boolean;
   nidVerified: boolean;
   nidNumber?: string;
+  nidDob?: string;
+  dob?: string;
   holdingTaxNumber?: string;
   nidPropertyLocation?: string;
   nidStatus?: "unverified" | "pending" | "verified" | "rejected";
@@ -71,6 +73,8 @@ const UserSchema = new Schema<IUserDocument>(
       default: false,
     },
     nidNumber: { type: String, trim: true },
+    nidDob: { type: String, trim: true },
+    dob: { type: String, trim: true },
     holdingTaxNumber: { type: String, trim: true },
     nidPropertyLocation: { type: String, trim: true },
     nidStatus: {

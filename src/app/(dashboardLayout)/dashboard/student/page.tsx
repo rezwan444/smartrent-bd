@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAppSelector } from "@/redux/hook";
 import {
@@ -23,7 +24,8 @@ export default function StudentDashboardPage() {
     ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
     : "Student Tenant";
 
-  const scheduledVisits = [
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [scheduledVisits, setScheduledVisits] = useState<any[]>([
     {
       id: "v-01",
       propertyTitle: "Single Master Bed in Dhanmondi 27",
@@ -46,7 +48,44 @@ export default function StudentDashboardPage() {
       ownerName: "Abdul Matin",
       ownerPhone: "+880 1819-556677",
     },
-  ];
+  ]);
+
+  useEffect(() => {
+    let ignore = false;
+    async function loadVisits() {
+      try {
+        const res = await fetch("/api/student/visits");
+        if (res.ok) {
+          const json = await res.json();
+          if (!ignore && json.success && Array.isArray(json.data) && json.data.length > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setScheduledVisits(json.data.map((v: any) => ({
+              id: v.id || v._id,
+              propertyTitle: v.propertyTitle,
+              propertyId: v.propertyId,
+              location: v.propertyAddress || "Dhaka, Bangladesh",
+              date: v.preferredDate,
+              time: v.timeSlot,
+              status:
+                v.status === "approved"
+                  ? "Confirmed"
+                  : v.status === "declined"
+                  ? "Declined"
+                  : "Pending Host",
+              ownerName: "Verified Landlord",
+              ownerPhone: v.contactPhone,
+            })));
+          }
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    loadVisits();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const savedListings = [
     {

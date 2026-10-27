@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { z } from "zod";
+import { ownerVerificationSchema } from "./ownerVerificationSchema.ts";
 
 describe("Property Moderation, Verification & Scam Suppression Backend (Track C3)", () => {
   // Mock helper matching server-side requireRole logic
@@ -232,6 +233,83 @@ describe("Property Moderation, Verification & Scam Suppression Backend (Track C3
       assert.equal("reporterEmail" in publicOutput, false);
       assert.equal("reporterPhone" in publicOutput, false);
       assert.equal(publicOutput.id, "p1");
+    });
+  });
+
+  describe("6. Owner NID Verification Zod Validation & Date of Birth (DOB) Requirements", () => {
+    it("accepts valid NID verification with 10 or 17 digit NID and adult DOB", () => {
+      const validSubmission = {
+        nidNumber: "1985-2692-4401-29",
+        dob: "1985-08-15",
+        holdingTaxNumber: "DNCC-HOLD-84920",
+        propertyAddress: "House 14, Road 4, Block C, Banasree, Dhaka",
+      };
+
+      const result = ownerVerificationSchema.safeParse(validSubmission);
+      assert.equal(result.success, true);
+    });
+
+    it("accepts valid 10-digit Smart NID", () => {
+      const validSmartNid = {
+        nidNumber: "2692440129",
+        dob: "1995-03-21",
+        holdingTaxNumber: "DSCC-4921",
+        propertyAddress: "Mirpur 2, Dhaka",
+      };
+
+      const result = ownerVerificationSchema.safeParse(validSmartNid);
+      assert.equal(result.success, true);
+    });
+
+    it("rejects NID verification if Date of Birth (DOB) is missing or malformed", () => {
+      const invalidDob = {
+        nidNumber: "1985-2692-4401-29",
+        dob: "15/08/1985", // Not YYYY-MM-DD
+        holdingTaxNumber: "DNCC-HOLD-84920",
+        propertyAddress: "Banasree, Dhaka",
+      };
+
+      const result = ownerVerificationSchema.safeParse(invalidDob);
+      assert.equal(result.success, false);
+      assert.ok(result.error?.issues.some((i) => i.message.includes("YYYY-MM-DD")));
+    });
+
+    it("rejects NID verification if applicant is underage (< 18 years old)", () => {
+      const underageSubmission = {
+        nidNumber: "2015-2692-4401-29",
+        dob: "2015-01-01", // ~11 years old
+        holdingTaxNumber: "DNCC-HOLD-84920",
+        propertyAddress: "Banasree, Dhaka",
+      };
+
+      const result = ownerVerificationSchema.safeParse(underageSubmission);
+      assert.equal(result.success, false);
+      assert.ok(result.error?.issues.some((i) => i.message.includes("at least 18 years of age")));
+    });
+
+    it("rejects NID verification if Date of Birth is in the future", () => {
+      const futureSubmission = {
+        nidNumber: "1985-2692-4401-29",
+        dob: "2030-05-10",
+        holdingTaxNumber: "DNCC-HOLD-84920",
+        propertyAddress: "Banasree, Dhaka",
+      };
+
+      const result = ownerVerificationSchema.safeParse(futureSubmission);
+      assert.equal(result.success, false);
+    });
+
+    it("rejects NID with invalid characters or too short (< 10 chars)", () => {
+      const shortNid = {
+        nidNumber: "12345",
+        dob: "1985-08-15",
+        holdingTaxNumber: "DNCC-HOLD-84920",
+        propertyAddress: "Banasree, Dhaka",
+      };
+
+      const result = ownerVerificationSchema.safeParse(shortNid);
+      assert.equal(result.success, false);
+      assert.ok(result.error?.issues.some((i) => i.message.includes("at least 10 characters")));
     });
   });
 });

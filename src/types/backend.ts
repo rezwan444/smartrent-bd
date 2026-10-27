@@ -51,6 +51,11 @@ export interface IUser {
   role: UserRole;
   isVerified: boolean;
   nidVerified: boolean;
+  nidNumber?: string;
+  nidDob?: string;
+  dob?: string;
+  holdingTaxNumber?: string;
+  nidStatus?: "unverified" | "pending" | "verified" | "rejected";
   avatar?: string;
   location?: string;
   isDemoUser?: boolean;

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Property, formatPropertyForPublic } from "@/models/Property";
-import { requireRole } from "@/lib/auth-server";
+import { requireRole, getAuthenticatedUser } from "@/lib/auth-server";
 import { MOCK_PROPERTIES } from "@/data/mockProperties";
 import { filterProperties, sortProperties } from "@/lib/propertyFilters";
 import type {
@@ -14,6 +14,19 @@ import type {
 import type { PropertyFilterCriteria, PropertySortOption } from "@/types/property";
 
 export const dynamic = "force-dynamic";
+
+const imageSourceSchema = z
+  .string()
+  .trim()
+  .min(1, "Image is required")
+  .refine(
+    (val) =>
+      val.startsWith("http://") ||
+      val.startsWith("https://") ||
+      val.startsWith("/") ||
+      val.startsWith("data:image/"),
+    { message: "Valid image URL, upload path, or data URI is required" }
+  );
 
 // Zod schema for validating property creation
 const createPropertySchema = z.object({
@@ -70,8 +83,8 @@ const createPropertySchema = z.object({
     .optional()
     .default([]),
   availability: z.string().optional().default("Available Now"),
-  featuredImage: z.string().url("Valid image URL is required"),
-  images: z.array(z.string().url()).optional().default([]),
+  featuredImage: imageSourceSchema,
+  images: z.array(imageSourceSchema).optional().default([]),
   genderPreference: z
     .enum(["any", "male_only", "female_only", "family_only"])
     .optional()
@@ -136,13 +149,37 @@ export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
 
+    const isMineQuery = searchParams.get("mine") === "true" || searchParams.get("owner") === "me";
+    const statusParam = searchParams.get("status");
+
     // Build MongoDB query
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const filterQuery: Record<string, any> = {
-      // Exclude rejected and scam-hidden listings per Track C3 rules
-      status: { $ne: "rejected" },
-      isHiddenFromSearch: { $ne: true },
-    };
+    const filterQuery: Record<string, any> = {};
+
+    if (isMineQuery) {
+      const auth = await getAuthenticatedUser(req);
+      if (!auth.user) {
+        const response: ApiResponse = {
+          success: false,
+          error: "Unauthorized: Please sign in to view your listings.",
+          timestamp,
+        };
+        return NextResponse.json(response, { status: 401 });
+      }
+      filterQuery.ownerId = auth.user._id;
+    } else {
+      // Public search: strictly exclude unapproved (pending), rejected, and scam-hidden listings
+      filterQuery.status = "verified";
+      filterQuery.isHiddenFromSearch = { $ne: true };
+
+      if (statusParam === "all") {
+        const auth = await getAuthenticatedUser(req);
+        if (auth.role === "ADMIN" || auth.role === "SUPER_ADMIN" || auth.role === "STAFF") {
+          delete filterQuery.status;
+          delete filterQuery.isHiddenFromSearch;
+        }
+      }
+    }
 
     if (propertyType !== "all") {
       filterQuery.type = propertyType;

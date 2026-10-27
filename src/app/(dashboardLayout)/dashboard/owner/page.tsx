@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAppSelector } from "@/redux/hook";
 import { toast } from "sonner";
 import {
   Building2,
   CalendarCheck,
-  Users,
   PlusCircle,
   MapPin,
   CheckCircle2,
@@ -19,8 +18,14 @@ import {
   Clock,
   Check,
   AlertTriangle,
+  Edit2,
+  Trash2,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { getOwnerProperties } from "@/lib/propertyModerationStorage";
+import { CreateEditListingModal } from "@/components/properties/CreateEditListingModal";
+import { AppConfirmDialog } from "@/components/shared/AppConfirmDialog";
 import type { ModeratedPropertyItem } from "@/types/moderation";
 
 export default function OwnerDashboardPage() {
@@ -29,81 +34,238 @@ export default function OwnerDashboardPage() {
     ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
     : "Property Owner";
 
-  const ownerQuery = displayName && displayName !== "Property Owner" ? displayName : "Kabir Hossain";
+  const ownerQuery = displayName && displayName !== "Property Owner" ? displayName : "";
 
-  // Reactive owner properties from unified moderation store
-  const [myProperties, setMyProperties] = useState<ModeratedPropertyItem[]>(() =>
-    getOwnerProperties(ownerQuery)
-  );
+  // Reactive owner properties from live database with fallback to demo store
+  const [myProperties, setMyProperties] = useState<ModeratedPropertyItem[]>([]);
+  const [isLoadingProps, setIsLoadingProps] = useState(true);
 
+  // Modal states
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [editingListing, setEditingListing] = useState<any | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [deletingListing, setDeletingListing] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Load properties from backend API upon user actions (refresh, save, delete)
+  const fetchOwnerProperties = useCallback(async () => {
+    setIsLoadingProps(true);
+    try {
+      const res = await fetch("/api/owner/properties");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const mapped: ModeratedPropertyItem[] = json.data.map((item: any) => ({
+            id: item.id || item._id,
+            title: item.title,
+            type: item.type,
+            location:
+              typeof item.location === "string"
+                ? item.location
+                : `${item.location?.neighborhood || ""}, ${item.location?.city || ""}`,
+            rent: typeof item.rent === "number" ? `৳ ${item.rent.toLocaleString()} / mo` : String(item.rent),
+            ownerName: item.owner?.name || displayName,
+            ownerPhone: item.owner?.phone || "+880 1700-000000",
+            nidStatus: item.owner?.isVerified ? "Verified" : "Submitted (Pending)",
+            status: item.status || (item.isVerified ? "verified" : "pending"),
+            isHiddenFromSearch: Boolean(item.isHiddenFromSearch),
+            submittedAt: item.createdAt || new Date().toISOString(),
+            adminNotes: item.adminNotes || item.moderationNotes,
+            rawProperty: item,
+          }));
+          setMyProperties(mapped);
+          setIsLoadingProps(false);
+          return;
+        }
+      }
+    } catch {
+      // Fall through to local fallback
+    }
+    setMyProperties(getOwnerProperties(ownerQuery));
+    setIsLoadingProps(false);
+  }, [displayName, ownerQuery]);
+
+  // Initial load without synchronous setState in effect body
   useEffect(() => {
+    let ignore = false;
+    async function initialLoad() {
+      try {
+        const res = await fetch("/api/owner/properties");
+        if (res.ok) {
+          const json = await res.json();
+          if (!ignore && json.success && Array.isArray(json.data)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const mapped: ModeratedPropertyItem[] = json.data.map((item: any) => ({
+              id: item.id || item._id,
+              title: item.title,
+              type: item.type,
+              location:
+                typeof item.location === "string"
+                  ? item.location
+                  : `${item.location?.neighborhood || ""}, ${item.location?.city || ""}`,
+              rent: typeof item.rent === "number" ? `৳ ${item.rent.toLocaleString()} / mo` : String(item.rent),
+              ownerName: item.owner?.name || displayName,
+              ownerPhone: item.owner?.phone || "+880 1700-000000",
+              nidStatus: item.owner?.isVerified ? "Verified" : "Submitted (Pending)",
+              status: item.status || (item.isVerified ? "verified" : "pending"),
+              isHiddenFromSearch: Boolean(item.isHiddenFromSearch),
+              submittedAt: item.createdAt || new Date().toISOString(),
+              adminNotes: item.adminNotes || item.moderationNotes,
+              rawProperty: item,
+            }));
+            setMyProperties(mapped);
+            setIsLoadingProps(false);
+            return;
+          }
+        }
+      } catch {
+        // Fallback
+      }
+      if (!ignore) {
+        setMyProperties(getOwnerProperties(ownerQuery));
+        setIsLoadingProps(false);
+      }
+    }
+
+    initialLoad();
+
     const handleUpdate = () => {
-      setMyProperties(getOwnerProperties(ownerQuery));
+      fetchOwnerProperties();
     };
     window.addEventListener("smartrent_moderation_updated", handleUpdate);
     return () => {
+      ignore = true;
       window.removeEventListener("smartrent_moderation_updated", handleUpdate);
     };
-  }, [ownerQuery]);
+  }, [displayName, fetchOwnerProperties, ownerQuery]);
 
-  const [visitRequests, setVisitRequests] = useState([
-    {
-      id: "req-01",
-      studentName: "Tanvir Hasan",
-      institution: "Dhaka University (Dept of CSE)",
-      propertyTitle: "Master Bed in Dhanmondi 27",
-      propertyId: "prop-01",
-      date: "Saturday, Oct 19",
-      time: "3:30 PM",
-      status: "pending",
-    },
-    {
-      id: "req-02",
-      studentName: "Sajjad Ali",
-      institution: "Bogura Govt College",
-      propertyTitle: "Furnished Mess Seat near Campus",
-      propertyId: "prop-02",
-      date: "Sunday, Oct 20",
-      time: "10:00 AM",
-      status: "pending",
-    },
-  ]);
+  // Handle successful creation or editing
+  const handleSaveSuccess = () => {
+    fetchOwnerProperties();
+  };
 
-  const handleAction = (id: string, action: "approve" | "decline") => {
+  // Handle listing deletion or safe deactivation
+  const handleConfirmDelete = async () => {
+    if (!deletingListing) return;
+    const targetId = deletingListing.id || deletingListing._id;
+    setIsDeleting(true);
+
+    try {
+      const res = await fetch(`/api/properties/${targetId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to remove listing.");
+      }
+
+      toast.success(data.message || "Listing removed successfully.");
+      setDeletingListing(null);
+      fetchOwnerProperties();
+    } catch (err) {
+      console.error("Delete listing error:", err);
+      toast.error(err instanceof Error ? err.message : "Error deleting listing.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [visitRequests, setVisitRequests] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [maintenanceTickets, setMaintenanceTickets] = useState<any[]>([]);
+
+  useEffect(() => {
+    let ignore = false;
+    async function loadVisitsAndMaint() {
+      try {
+        const vRes = await fetch("/api/owner/visits");
+        if (vRes.ok) {
+          const vJson = await vRes.json();
+          if (!ignore && vJson.success && Array.isArray(vJson.data)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setVisitRequests(vJson.data.map((r: any) => ({
+              id: r.id || r._id,
+              studentName: r.studentName,
+              institution: r.institution || "Student",
+              propertyTitle: r.propertyTitle,
+              propertyId: r.propertyId,
+              date: r.preferredDate,
+              time: r.timeSlot,
+              status: r.status,
+            })));
+          }
+        }
+      } catch {
+        // Fallback
+      }
+
+      try {
+        const mRes = await fetch("/api/owner/maintenance");
+        if (mRes.ok) {
+          const mJson = await mRes.json();
+          if (!ignore && mJson.success && Array.isArray(mJson.data)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setMaintenanceTickets(mJson.data.map((t: any) => ({
+              id: t.id || t._id,
+              propertyTitle: t.propertyTitle,
+              tenantName: t.tenantName,
+              issue: t.issue,
+              urgency: t.urgency,
+              status: t.status,
+              date: t.createdAt ? new Date(t.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Recent",
+            })));
+          }
+        }
+      } catch {
+        // Fallback
+      }
+    }
+
+    loadVisitsAndMaint();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const handleAction = async (id: string, action: "approve" | "decline") => {
+    const targetStatus = action === "approve" ? "approved" : "declined";
+    try {
+      await fetch(`/api/owner/visits/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: targetStatus }),
+      });
+    } catch {
+      // Local sync
+    }
+
     setVisitRequests((prev) =>
       prev.map((req) =>
-        req.id === id ? { ...req, status: action === "approve" ? "approved" : "declined" } : req
+        req.id === id ? { ...req, status: targetStatus } : req
       )
     );
     toast.success(
       action === "approve"
-        ? "Visit request approved! Confirmation SMS simulated."
+        ? "Visit request confirmed! Student will receive arrival details."
         : "Visit request declined."
     );
   };
 
-  const [maintenanceTickets, setMaintenanceTickets] = useState([
-    {
-      id: "maint-01",
-      propertyTitle: "Master Bed in Dhanmondi 27",
-      tenantName: "Tanvir Hasan",
-      issue: "Kitchen Gas Regulator & Hose Leakage",
-      urgency: "High",
-      status: "in_progress",
-      date: "Oct 16",
-    },
-    {
-      id: "maint-03",
-      propertyTitle: "Furnished Mess Seat near Campus",
-      tenantName: "Sajjad Ali",
-      issue: "Common Washbasin Tap Dripping Constantly",
-      urgency: "Medium",
-      status: "pending",
-      date: "Oct 17",
-    },
-  ]);
+  const handleMaintAction = async (id: string, newStatus: "in_progress" | "resolved") => {
+    try {
+      await fetch(`/api/owner/maintenance/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+    } catch {
+      // Local sync
+    }
 
-  const handleMaintAction = (id: string, newStatus: "in_progress" | "resolved") => {
     setMaintenanceTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
     );
@@ -124,11 +286,22 @@ export default function OwnerDashboardPage() {
               <Building2 className="w-3.5 h-3.5" />
               <span>Property Owner Portal</span>
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xs text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <Link
+              href="/dashboard/owner/verification"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xs text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+            >
               <ShieldCheck className="w-3 h-3" />
-              <span>Host NID: Verified</span>
+              <span>Host NID: Verified &bull; Details &rarr;</span>
+            </Link>
+            <span className="text-xs text-muted-foreground">
+              • {user?.email ? `${user.email} Session` : "Demo Landlord Session"}
             </span>
-            <span className="text-xs text-muted-foreground">• Demo Landlord Session</span>
+            {isLoadingProps && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground animate-pulse">
+                <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                <span>Syncing live listings...</span>
+              </span>
+            )}
           </div>
           <h1 className="text-xl sm:text-2xl font-bold font-heading text-foreground tracking-tight">
             Welcome, {displayName}!
@@ -138,35 +311,43 @@ export default function OwnerDashboardPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() =>
-            toast.info("Property listing submission flow is linked to administrative inspection queue.", {
-              duration: 3500,
-            })
-          }
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shrink-0 shadow-2xs cursor-pointer"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>Add New Listing (Demo)</span>
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => fetchOwnerProperties()}
+            disabled={isLoadingProps}
+            title="Refresh listings"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xs border border-border transition-colors cursor-pointer"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoadingProps ? "animate-spin" : ""}`} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shrink-0 shadow-2xs cursor-pointer"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Add New Listing</span>
+          </button>
+        </div>
       </div>
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-        <div className="bg-card border border-border rounded-xs p-4 shadow-2xs flex items-center gap-3.5">
+        <a href="#listings" className="bg-card border border-border hover:border-primary/50 rounded-xs p-4 shadow-2xs flex items-center gap-3.5 transition-colors">
           <div className="w-10 h-10 rounded-xs bg-secondary text-primary flex items-center justify-center shrink-0">
             <Building2 className="w-5 h-5" />
           </div>
           <div>
             <p className="text-xl font-bold text-foreground">{myProperties.length} Accommodations</p>
             <p className="text-xs text-muted-foreground">
-              {myProperties.filter((p) => p.status === "verified").length} Verified & Active
+              {myProperties.filter((p) => p.status === "verified" && !p.isHiddenFromSearch).length} Verified & Public
             </p>
           </div>
-        </div>
+        </a>
 
-        <div className="bg-card border border-border rounded-xs p-4 shadow-2xs flex items-center gap-3.5">
+        <Link href="/dashboard/owner/visits" className="bg-card border border-border hover:border-primary/50 rounded-xs p-4 shadow-2xs flex items-center gap-3.5 transition-colors">
           <div className="w-10 h-10 rounded-xs bg-secondary text-primary flex items-center justify-center shrink-0">
             <CalendarCheck className="w-5 h-5" />
           </div>
@@ -174,19 +355,21 @@ export default function OwnerDashboardPage() {
             <p className="text-xl font-bold text-foreground">
               {visitRequests.filter((r) => r.status === "pending").length} Pending
             </p>
-            <p className="text-xs text-muted-foreground">Student Visit Requests</p>
+            <p className="text-xs text-muted-foreground">Student Visit Requests &rarr;</p>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-card border border-border rounded-xs p-4 shadow-2xs flex items-center gap-3.5">
+        <Link href="/dashboard/owner/maintenance" className="bg-card border border-border hover:border-primary/50 rounded-xs p-4 shadow-2xs flex items-center gap-3.5 transition-colors">
           <div className="w-10 h-10 rounded-xs bg-secondary text-primary flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5" />
+            <Wrench className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xl font-bold text-foreground">231 Views</p>
-            <p className="text-xs text-muted-foreground">Student Reach This Month</p>
+            <p className="text-xl font-bold text-foreground">
+              {maintenanceTickets.filter((t) => t.status !== "resolved").length} Active Repairs
+            </p>
+            <p className="text-xs text-muted-foreground">Tenant Maintenance &rarr;</p>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Pending Student Visit Requests */}
@@ -198,7 +381,13 @@ export default function OwnerDashboardPage() {
               Incoming Student Visit Requests
             </h2>
           </div>
-          <span className="text-xs text-muted-foreground">Review & confirm scheduled times</span>
+          <Link
+            href="/dashboard/owner/visits"
+            className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+          >
+            <span>Manage All Visits ({visitRequests.length})</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
         <div className="space-y-3">
@@ -268,9 +457,13 @@ export default function OwnerDashboardPage() {
               Tenant Maintenance & Repair Requests
             </h2>
           </div>
-          <span className="text-xs text-muted-foreground">
-            {maintenanceTickets.filter((t) => t.status !== "resolved").length} active repairs
-          </span>
+          <Link
+            href="/dashboard/owner/maintenance"
+            className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+          >
+            <span>Manage All Repairs ({maintenanceTickets.length})</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
         <div className="space-y-3">
@@ -298,7 +491,7 @@ export default function OwnerDashboardPage() {
                   Property: <strong className="text-foreground">{ticket.propertyTitle}</strong> • Reported by: {ticket.tenantName}
                 </p>
                 <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Clock className="w-3 h-3 text-primary" />
+                  <Clock className="w-3.5 h-3.5 text-primary" />
                   <span>Reported on {ticket.date}</span>
                 </div>
               </div>
@@ -333,8 +526,8 @@ export default function OwnerDashboardPage() {
         </div>
       </div>
 
-      {/* My Accommodations & Verification Status (Feature 3 & 8) */}
-      <div className="bg-card border border-border rounded-xs p-5 shadow-2xs space-y-4">
+      {/* My Accommodations & Verification Status */}
+      <div id="listings" className="bg-card border border-border rounded-xs p-5 shadow-2xs space-y-4 scroll-mt-20">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-border pb-3">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
@@ -347,93 +540,171 @@ export default function OwnerDashboardPage() {
               Review live inspection status, admin feedback notes, and visibility on the SmartRent BD public search.
             </p>
           </div>
-          <span className="text-xs text-muted-foreground font-medium">
-            {myProperties.length} listings registered
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground font-medium">
+              {myProperties.length} listings registered
+            </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {myProperties.map((prop) => (
-            <div
-              key={prop.id}
-              className={`border rounded-xs p-4 bg-background space-y-3 flex flex-col justify-between transition-colors ${
-                prop.status === "pending"
-                  ? "border-amber-500/30"
-                  : prop.status === "rejected"
-                  ? "border-destructive/40 bg-destructive/5"
-                  : prop.isHiddenFromSearch
-                  ? "border-rose-500/40 bg-rose-500/5"
-                  : "border-border"
-              }`}
+        {myProperties.length === 0 ? (
+          <div className="text-center py-12 border border-dashed border-border rounded-xs space-y-3">
+            <div className="w-12 h-12 rounded-full bg-secondary text-primary mx-auto flex items-center justify-center">
+              <Building2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm font-bold text-foreground">No Accommodations Listed Yet</h3>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              Start by publishing your first student room, sublet, or flat. It will be queued for admin inspection immediately.
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsCreateModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary-dark rounded-xs transition-colors shadow-2xs cursor-pointer"
             >
-              <div className="space-y-1.5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[10px] font-semibold px-2 py-0.5 bg-secondary text-primary rounded-xs border border-primary/20 uppercase">
-                    {prop.type}
-                  </span>
+              <PlusCircle className="w-4 h-4" />
+              <span>Create First Listing</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {myProperties.map((prop) => (
+              <div
+                key={prop.id}
+                className={`border rounded-xs p-4 bg-background space-y-3 flex flex-col justify-between transition-colors ${
+                  prop.status === "pending"
+                    ? "border-amber-500/30"
+                    : prop.status === "rejected"
+                    ? "border-destructive/40 bg-destructive/5"
+                    : prop.isHiddenFromSearch
+                    ? "border-rose-500/40 bg-rose-500/5"
+                    : "border-border"
+                }`}
+              >
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 bg-secondary text-primary rounded-xs border border-primary/20 uppercase">
+                      {prop.type}
+                    </span>
 
-                  {/* Status Badge */}
-                  {prop.isHiddenFromSearch ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-xs border border-rose-500/25">
-                      <EyeOff className="w-3.5 h-3.5" />
-                      <span>Under Safety Review (Hidden)</span>
-                    </span>
-                  ) : prop.status === "verified" ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-xs border border-emerald-500/25">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>Verified & Published</span>
-                    </span>
-                  ) : prop.status === "pending" ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-xs border border-amber-500/25">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>Pending Admin Inspection</span>
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-destructive bg-destructive/10 px-2 py-0.5 rounded-xs border border-destructive/25">
-                      <XCircle className="w-3.5 h-3.5" />
-                      <span>Rejected: Revisions Required</span>
-                    </span>
+                    {/* Status Badge */}
+                    {prop.isHiddenFromSearch ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-xs border border-rose-500/25">
+                        <EyeOff className="w-3.5 h-3.5" />
+                        <span>Under Safety Review (Hidden)</span>
+                      </span>
+                    ) : prop.status === "verified" ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-xs border border-emerald-500/25">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Verified & Published</span>
+                      </span>
+                    ) : prop.status === "pending" ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-xs border border-amber-500/25">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>Pending Admin Inspection</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-destructive bg-destructive/10 px-2 py-0.5 rounded-xs border border-destructive/25">
+                        <XCircle className="w-3.5 h-3.5" />
+                        <span>Rejected: Revisions Required</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-xs sm:text-sm font-bold text-foreground leading-snug">
+                    {prop.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
+                    <span>{prop.location}</span>
+                  </p>
+                  <p className="text-xs font-bold text-primary pt-0.5">{prop.rent}</p>
+
+                  {/* Admin Feedback Notes */}
+                  {prop.adminNotes && (
+                    <div className="p-2.5 rounded-xs bg-secondary/60 border border-border text-xs space-y-1 mt-2">
+                      <span className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                        <span>Moderation Feedback:</span>
+                      </span>
+                      <p className="text-xs text-foreground font-medium">{prop.adminNotes}</p>
+                    </div>
                   )}
                 </div>
 
-                <h3 className="text-xs sm:text-sm font-bold text-foreground leading-snug">
-                  {prop.title}
-                </h3>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
-                  <span>{prop.location}</span>
-                </p>
-                <p className="text-xs font-bold text-primary pt-0.5">{prop.rent}</p>
+                <div className="pt-2 border-t border-border/60 flex items-center justify-between text-xs mt-2">
+                  <span className="text-[11px] text-muted-foreground font-mono">
+                    Ref: {prop.id}
+                  </span>
 
-                {/* Admin Feedback Notes */}
-                {prop.adminNotes && (
-                  <div className="p-2.5 rounded-xs bg-secondary/60 border border-border text-xs space-y-1 mt-2">
-                    <span className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                      <span>Moderation Feedback:</span>
-                    </span>
-                    <p className="text-xs text-foreground font-medium">{prop.adminNotes}</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingListing(prop.rawProperty || prop)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-foreground hover:text-primary hover:bg-secondary rounded-2xs border border-border transition-colors cursor-pointer"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                      <span>Edit</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDeletingListing(prop.rawProperty || prop)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-destructive hover:bg-destructive/10 rounded-2xs border border-destructive/20 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Delete</span>
+                    </button>
+
+                    <Link
+                      href={`/properties/${prop.id}`}
+                      className="inline-flex items-center gap-1 text-primary hover:underline font-semibold text-[11px] ml-1"
+                    >
+                      <span>View</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
                   </div>
-                )}
+                </div>
               </div>
-
-              <div className="pt-2 border-t border-border/60 flex items-center justify-between text-xs mt-2">
-                <span className="text-[11px] text-muted-foreground font-mono">
-                  Ref: {prop.id}
-                </span>
-
-                <Link
-                  href={`/properties/${prop.id}`}
-                  className="inline-flex items-center gap-1 text-primary hover:underline font-semibold text-xs"
-                >
-                  <span>Public View</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Create Modal */}
+      {isCreateModalOpen && (
+        <CreateEditListingModal
+          key="create-listing-modal"
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          initialData={null}
+          onSuccess={handleSaveSuccess}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {editingListing && (
+        <CreateEditListingModal
+          key={`edit-${editingListing.id || editingListing._id}`}
+          isOpen={Boolean(editingListing)}
+          onClose={() => setEditingListing(null)}
+          initialData={editingListing}
+          onSuccess={handleSaveSuccess}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AppConfirmDialog
+        isOpen={Boolean(deletingListing)}
+        onOpenChange={(open) => {
+          if (!open) setDeletingListing(null);
+        }}
+        title="Remove or Deactivate Listing?"
+        description={`Are you sure you want to delete "${deletingListing?.title || "this accommodation"}"? If there are active safety reports, the listing will be safely deactivated to preserve moderation logs.`}
+        confirmText={isDeleting ? "Processing..." : "Confirm Removal"}
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

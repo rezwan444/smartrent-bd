@@ -125,7 +125,7 @@ export function RoommatePreferencesModal({
                     value={formData.university}
                     onChange={(e) => setFormData({ ...formData, university: e.target.value })}
                     className="h-9 text-xs rounded-xs bg-background border-border"
-                    placeholder="e.g. University of Dhaka"
+                    placeholder="e.g. Pundro University (PUB) or DU"
                     required
                   />
                 </div>

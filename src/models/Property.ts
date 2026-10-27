@@ -234,18 +234,46 @@ export const Property: Model<IPropertyDocument> =
   mongoose.model<IPropertyDocument>("Property", PropertySchema);
 
 /**
- * Safely formats a Property document for public API consumption,
- * mapping _id to id and excluding internal database metadata.
+ * Safely formats a Property document for public API consumption and Server Components,
+ * mapping _id to id and excluding internal database metadata and non-plain prototypes.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatPropertyForPublic(doc: any): Record<string, unknown> {
-  const obj = typeof doc.toObject === "function" ? doc.toObject() : { ...doc };
-  const id = obj.customId || (obj._id ? String(obj._id) : undefined);
-  delete obj.__v;
-  delete obj.customId;
+  if (!doc) return {};
+  const raw = typeof doc.toObject === "function" ? doc.toObject() : doc;
+  const plain = JSON.parse(JSON.stringify(raw));
+
+  const mongoObjectId = plain._id ? String(plain._id) : "";
+  const customId = plain.customId ? String(plain.customId) : undefined;
+  const resolvedId = customId || mongoObjectId;
+
+  delete plain.__v;
+  delete plain.customId;
+  delete plain.moderationNotes;
+  delete plain.reviewedBy;
+
+  if (Array.isArray(plain.nearbyLandmarks)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    plain.nearbyLandmarks = plain.nearbyLandmarks.map((lm: any) => {
+      if (lm && typeof lm === "object") {
+        delete lm._id;
+      }
+      return lm;
+    });
+  }
+
+  if (plain.owner && typeof plain.owner === "object") {
+    delete plain.owner._id;
+  }
+
+  if (plain.ownerId) {
+    plain.ownerId = String(plain.ownerId);
+  }
+
   return {
-    ...obj,
-    id,
+    ...plain,
+    id: resolvedId,
+    _id: mongoObjectId || resolvedId,
   };
 }
 

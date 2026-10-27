@@ -86,6 +86,7 @@ export async function GET(req: NextRequest) {
           ownerPhone: u.phone || "+880 1800-000000",
           ownerEmail: u.email,
           nidNumber: u.nidNumber || "1985-2692-4401-29",
+          dob: u.nidDob || u.dob || "",
           holdingTaxNumber: u.holdingTaxNumber || "DNCC-HOLD-84920",
           propertyLocation: u.nidPropertyLocation || u.location || "Dhaka, Bangladesh",
           submittedAt: u.nidSubmittedAt

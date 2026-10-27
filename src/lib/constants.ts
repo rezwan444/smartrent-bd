@@ -67,9 +67,30 @@ export const SIDEBAR_ITEMS = [
   // ===== PROPERTY OWNER =====
   {
     id: "owner-dashboard",
-    label: "Owner Portal",
+    label: "My Properties",
     href: "/dashboard/owner",
     icon: "LayoutDashboard",
+    roles: ["OWNER"],
+  },
+  {
+    id: "owner-visits",
+    label: "Visit Requests",
+    href: "/dashboard/owner/visits",
+    icon: "CalendarCheck",
+    roles: ["OWNER"],
+  },
+  {
+    id: "owner-maintenance",
+    label: "Maintenance & Repairs",
+    href: "/dashboard/owner/maintenance",
+    icon: "Settings",
+    roles: ["OWNER"],
+  },
+  {
+    id: "owner-verification",
+    label: "Host NID Verification",
+    href: "/dashboard/owner/verification",
+    icon: "UserCheck2",
     roles: ["OWNER"],
   },
 ];
