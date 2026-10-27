@@ -116,10 +116,13 @@ export async function GET(req: NextRequest) {
       await user.save();
     } else {
       // Update avatar if not set
-      if (!user.avatar && profile.picture) {
+      if (profile.picture && user.avatar !== profile.picture) {
         user.avatar = profile.picture;
-        await user.save();
       }
+      if (profile.name && (!user.fullName || user.fullName === "Google User")) {
+        user.fullName = profile.name;
+      }
+      await user.save();
     }
 
     const currentTokenVersion = user.tokenVersion ?? 0;

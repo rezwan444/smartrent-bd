@@ -194,7 +194,9 @@ export default function RegisterPage() {
   };
 
   const handleGoogleSignUp = () => {
-    router.push(`/api/auth/google?role=${selectedUserType}`);
+    // Direct browser navigation required for external OAuth redirect flow
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = `/api/auth/google?role=${selectedUserType}`;
   };
 
   return (

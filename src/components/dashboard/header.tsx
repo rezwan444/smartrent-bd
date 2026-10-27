@@ -193,6 +193,7 @@ export function Header({
                   src={user.profilePictureUrl}
                   alt="profile"
                   draggable={false}
+                  unoptimized
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -220,10 +221,10 @@ export function Header({
             <div className="absolute right-0 mt-2 w-56 bg-card text-card-foreground border border-border rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150">
               <div className="p-3.5 border-b border-border bg-muted/30">
                 <p className="text-xs font-semibold text-foreground truncate">
-                  {user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Demo User"}
+                  {user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : (user?.email ? user.email.split("@")[0] : `${activeRole} Account`)}
                 </p>
                 <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                  {user?.email || "user@smartrentbd.com"}
+                  {user?.email || "Signed in"}
                 </p>
                 <div className="mt-2">
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-primary/10 text-primary border border-primary/20">

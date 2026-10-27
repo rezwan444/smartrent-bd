@@ -215,7 +215,9 @@ function LoginFormContent() {
   };
 
   const handleGoogleSignIn = () => {
-    router.push("/api/auth/google");
+    // Direct browser navigation required for external OAuth redirect flow
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = "/api/auth/google";
   };
 
   const handleQuickFill = (role: "student" | "owner" | "admin") => {

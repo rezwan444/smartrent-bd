@@ -1,28 +1,16 @@
-// "use client";
-
-// import { ChildrenProps } from "@/types/global";
-// import { Provider } from "react-redux";
-// import { store } from "./store";
-
-// // Auth initializer component
-
-// const ReduxProvider = ({ children }: ChildrenProps) => {
-//   return <Provider store={store}>{children}</Provider>;
-// };
-
-// export default ReduxProvider;
-
 "use client";
 
 import { ChildrenProps } from "@/types/global";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "./store";
+import { AuthInitializer } from "./AuthInitializer";
 
 const ReduxProvider = ({ children }: ChildrenProps) => {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
+        <AuthInitializer />
         {children}
       </PersistGate>
     </Provider>
