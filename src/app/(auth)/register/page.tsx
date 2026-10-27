@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -80,7 +79,6 @@ function GoogleIcon({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 export default function RegisterPage() {
-  const router = useRouter();
   const dispatch = useAppDispatch();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -154,40 +152,14 @@ export default function RegisterPage() {
             isOwner ? "Owner" : "Student"
           } Dashboard...`
         );
-        router.replace(targetDashboard);
+        // eslint-disable-next-line react-hooks/immutability
+        window.location.href = targetDashboard;
         return;
       }
 
       toast.error(result.error || "Registration failed. Please check your details.");
     } catch {
-      // Offline demo fallback if API endpoint is unreachable
-      dispatch(
-        setUser({
-          id: `demo-${selectedUserType}-user`,
-          email: data.email,
-          firstName: data.fullName.split(" ")[0] || "User",
-          lastName:
-            data.fullName.split(" ").slice(1).join(" ") ||
-            `(${isOwner ? "Owner" : "Student"})`,
-          phone: "+880 1700-000000",
-          location: "Dhaka, Bangladesh",
-          profilePictureUrl: null,
-          role: assignedRole,
-          status: IAllStatusEnum.ACTIVE,
-          twoFactor: false,
-          createdAt: "2026-01-01T00:00:00.000Z",
-          updatedAt: "2026-01-01T00:00:00.000Z",
-        })
-      );
-      dispatch(setTokens({ accessToken: `demo-token-${selectedUserType}` }));
-      Cookies.set("userRole", assignedRole.toString());
-
-      toast.success(
-        `Demo account prepared for ${data.fullName}! Redirecting to ${
-          isOwner ? "Owner" : "Student"
-        } Dashboard...`
-      );
-      router.replace(targetDashboard);
+      toast.error("Registration failed. Please check your connection and try again.");
     } finally {
       setIsSubmittingForm(false);
     }
@@ -249,7 +221,7 @@ export default function RegisterPage() {
             <span>Sign up with Google</span>
           </button>
 
-          {/* Divider — guaranteed non-wrapping with whitespace-nowrap */}
+          {/* Divider */}
           <div className="relative my-3" aria-hidden="true">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-border" />
@@ -450,7 +422,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Terms and conditions using reusable AppCheckbox */}
+            {/* Terms and conditions */}
             <div className="space-y-1 pt-1">
               <Controller
                 name="acceptTerms"

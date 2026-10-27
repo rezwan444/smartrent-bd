@@ -15,7 +15,7 @@ const ownerRoles = ["OWNER", "ADMIN", "SUPER_ADMIN"];
 
 function decodeTokenPayload(
   token: string
-): { role?: string; isDemoUser?: boolean } | null {
+): { role?: string; isDemoUser?: boolean; exp?: number } | null {
   try {
     if (token.startsWith("demo-token-")) {
       const key = token.replace("demo-token-", "").toLowerCase();
@@ -31,9 +31,19 @@ function decodeTokenPayload(
     const parts = token.split(".");
     if (parts.length !== 3) return null;
 
-    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    let base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (base64.length % 4 !== 0) {
+      base64 += "=";
+    }
     const json = atob(base64);
-    return JSON.parse(json);
+    const parsed = JSON.parse(json);
+
+    // Check expiration if exp claim is present
+    if (parsed.exp && Date.now() >= parsed.exp * 1000) {
+      return null;
+    }
+
+    return parsed;
   } catch {
     return null;
   }

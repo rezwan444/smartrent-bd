@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,14 +15,12 @@ import {
   EyeOff,
   ArrowRight,
   ShieldCheck,
-  KeyRound,
 } from "lucide-react";
 import { useAppDispatch } from "@/redux/hook";
 import { setTokens, setUser } from "@/redux/features/user/authSlice";
 import { IAllStatusEnum, IRole } from "@/types/global";
 import { AuthSidePanel } from "@/components/auth/AuthSidePanel";
 import { AppCheckbox } from "@/components/shared/AppCheckbox";
-import { validateCredentials, User } from "@/lib/auth";
 import Cookies from "js-cookie";
 
 // Validation schema
@@ -62,7 +60,6 @@ function GoogleIcon({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 function LoginFormContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTarget = searchParams.get("redirect") || "/";
   const dispatch = useAppDispatch();
@@ -73,7 +70,6 @@ function LoginFormContent() {
   const {
     register,
     handleSubmit,
-    setValue,
     control,
     setError,
     clearErrors,
@@ -86,40 +82,6 @@ function LoginFormContent() {
       rememberMe: true,
     },
   });
-
-  const completeDemoLogin = (validUser: User) => {
-    dispatch(
-      setUser({
-        id: validUser.id,
-        email: validUser.email,
-        firstName: validUser.name.split(" ")[0] || "Demo",
-        lastName:
-          validUser.name.split(" ").slice(1).join(" ") || `(${validUser.roleLabel})`,
-        phone: validUser.phone || "+880 1700-000000",
-        location: validUser.location || "Dhaka, Bangladesh",
-        profilePictureUrl: validUser.avatar || null,
-        role: (validUser.role as unknown as IRole) || IRole.SUPER_ADMIN,
-        status: IAllStatusEnum.ACTIVE,
-        twoFactor: false,
-        createdAt: "2026-01-01T00:00:00.000Z",
-        updatedAt: "2026-01-01T00:00:00.000Z",
-      })
-    );
-    dispatch(setTokens({ accessToken: `demo-token-${validUser.id}` }));
-    Cookies.set("userRole", validUser.role.toString());
-
-    toast.success(`Signed in as ${validUser.name} (${validUser.roleLabel})`);
-
-    const destination =
-      redirectTarget &&
-      redirectTarget !== "/" &&
-      redirectTarget !== "/login" &&
-      redirectTarget !== "/register"
-        ? redirectTarget
-        : validUser.dashboardPath;
-
-    router.replace(destination);
-  };
 
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmittingForm(true);
@@ -135,7 +97,7 @@ function LoginFormContent() {
       const result = await response.json();
 
       if (response.ok && result.success && result.data) {
-        const { user: authUser, accessToken, isDemoSession } = result.data;
+        const { user: authUser, accessToken } = result.data;
 
         let userRole: IRole = IRole.STUDENT;
         let dashboardPath = "/dashboard/student";
@@ -172,43 +134,29 @@ function LoginFormContent() {
         dispatch(setTokens({ accessToken }));
         Cookies.set("userRole", userRole.toString());
 
-        if (isDemoSession) {
-          toast.info(`Signed in as ${authUser.fullName} (Demo Profile)`);
-        } else {
-          toast.success(`Welcome back, ${authUser.fullName}!`);
-        }
+        toast.success(`Welcome back, ${authUser.fullName}!`);
 
         const destination =
           redirectTarget &&
           redirectTarget !== "/" &&
           redirectTarget !== "/login" &&
-          redirectTarget !== "/register"
+          redirectTarget !== "/register" &&
+          redirectTarget !== "/dashboard"
             ? redirectTarget
             : dashboardPath;
 
-        router.replace(destination);
+        // Perform authoritative full browser navigation to ensure cookies are sent to server components
+        // eslint-disable-next-line react-hooks/immutability
+        window.location.href = destination;
         return;
       }
 
       setError("password", {
         message: result.error || "Invalid email or password.",
       });
-      toast.error(result.error || "Invalid credentials!");
+      toast.error(result.error || "Invalid email or password.");
     } catch {
-      // Offline fallback to demo credentials if API network request fails
-      const validUser = validateCredentials(data.email, data.password);
-      if (!validUser) {
-        setError("password", {
-          message: "Invalid email or password. Use demo shortcuts (Student or Owner).",
-        });
-        toast.error(
-          "Invalid credentials! Please use valid demo credentials (Student Demo or Owner Demo)."
-        );
-        return;
-      }
-
-      clearErrors();
-      completeDemoLogin(validUser);
+      toast.error("Connection failed. Please check your internet connection.");
     } finally {
       setIsSubmittingForm(false);
     }
@@ -218,20 +166,6 @@ function LoginFormContent() {
     // Direct browser navigation required for external OAuth redirect flow
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = "/api/auth/google";
-  };
-
-  const handleQuickFill = (role: "student" | "owner" | "admin") => {
-    clearErrors();
-    if (role === "student") {
-      setValue("email", "student@smartrentbd.com", { shouldValidate: true });
-      setValue("password", "student123", { shouldValidate: true });
-    } else if (role === "owner") {
-      setValue("email", "owner@smartrentbd.com", { shouldValidate: true });
-      setValue("password", "owner123", { shouldValidate: true });
-    } else {
-      setValue("email", "admin@smartrentbd.com", { shouldValidate: true });
-      setValue("password", "admin123", { shouldValidate: true });
-    }
   };
 
   return (
@@ -264,37 +198,6 @@ function LoginFormContent() {
         </p>
       </div>
 
-      {/* Discrete Demo Quick Access Bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 rounded-xs bg-secondary/50 border border-border text-xs">
-        <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
-          <KeyRound className="w-3.5 h-3.5 text-primary" />
-          <span>Demo Access:</span>
-        </span>
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => handleQuickFill("student")}
-            className="px-2 py-0.5 text-[11px] font-medium bg-card hover:bg-secondary text-primary border border-border rounded-xs transition-colors cursor-pointer"
-          >
-            Student
-          </button>
-          <button
-            type="button"
-            onClick={() => handleQuickFill("owner")}
-            className="px-2 py-0.5 text-[11px] font-medium bg-card hover:bg-secondary text-foreground border border-border rounded-xs transition-colors cursor-pointer"
-          >
-            Owner
-          </button>
-          <button
-            type="button"
-            onClick={() => handleQuickFill("admin")}
-            className="px-2 py-0.5 text-[11px] font-medium bg-card hover:bg-secondary text-primary border border-primary/20 rounded-xs transition-colors cursor-pointer"
-          >
-            Admin
-          </button>
-        </div>
-      </div>
-
       {/* Google Sign-in */}
       <button
         type="button"
@@ -306,7 +209,7 @@ function LoginFormContent() {
         <span>Continue with Google</span>
       </button>
 
-      {/* Divider — guaranteed non-wrapping with whitespace-nowrap */}
+      {/* Divider */}
       <div className="relative my-3" aria-hidden="true">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-border" />
@@ -398,7 +301,7 @@ function LoginFormContent() {
           )}
         </div>
 
-        {/* Remember Me using reusable AppCheckbox */}
+        {/* Remember Me */}
         <div className="pt-0.5">
           <Controller
             name="rememberMe"

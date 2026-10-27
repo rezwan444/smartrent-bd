@@ -9,7 +9,9 @@
     "check": "pnpm lint && pnpm build",
     "lcheck": "pnpm lint",
     "lint": "eslint --max-warnings=0",
-    "test": "node --test src/lib/expenseSettlement.test.ts src/lib/propertyModeration.test.ts src/lib/navigationRoleSeparation.test.ts src/lib/propertyReview.test.ts src/lib/backendAuth.test.ts src/lib/propertyBackend.test.ts"
+    "test": "node --test src/lib/expenseSettlement.test.ts src/lib/propertyModeration.test.ts src/lib/navigationRoleSeparation.test.ts src/lib/propertyReview.test.ts src/lib/backendAuth.test.ts src/lib/propertyBackend.test.ts",
+    "seed:admin": "node --env-file=.env scripts/seed-admin.mjs",
+    "seed:users": "node --env-file=.env scripts/seed-all-users.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -41,6 +43,7 @@
     "mongoose": "^9.11.4",
     "next": "^16.4.3",
     "next-themes": "^0.4.6",
+    "nodemailer": "^10.2.1",
     "radix-ui": "^1.4.3",
     "react": "19.3.1",
     "react-day-picker": "^9.11.1",
@@ -61,6 +64,7 @@
     "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

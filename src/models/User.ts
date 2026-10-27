@@ -16,6 +16,7 @@ export interface IUserDocument extends Document {
   tokenVersion: number;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  resetPasswordOtp?: string;
   refreshTokenHash?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -87,7 +88,9 @@ const UserSchema = new Schema<IUserDocument>(
     },
     resetPasswordExpires: {
       type: Date,
-      select: false,
+    },
+    resetPasswordOtp: {
+      type: String,
     },
     refreshTokenHash: {
       type: String,
@@ -122,12 +125,17 @@ UserSchema.methods.toSafeObject = function (): Record<string, unknown> {
   delete obj.password;
   delete obj.resetPasswordToken;
   delete obj.resetPasswordExpires;
+  delete obj.resetPasswordOtp;
   delete obj.refreshTokenHash;
   delete obj.__v;
   return obj;
 };
 
-// Prevent model recompilation error in Next.js hot reload
+// In development, delete cached model to allow schema hot reload
+if (process.env.NODE_ENV !== "production" && mongoose.models.User) {
+  delete (mongoose.models as Record<string, unknown>).User;
+}
+
 export const User: Model<IUserDocument> =
   (mongoose.models.User as Model<IUserDocument>) ||
   mongoose.model<IUserDocument>("User", UserSchema);
